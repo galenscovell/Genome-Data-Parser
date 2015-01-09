@@ -1,0 +1,11 @@
+gene_name,location,sequence,function
+Gene_1,spleen,ACGTAGATCGC,development
+Gene_2,heart,CGCTCGAG,development
+Gene_3,brain,TGTCGCTGCC,signaling
+Gene_4,brain,AGATCGCTCGA,development
+Gene_5,heart,CGCTGCTCGC,signaling
+Gene_6,brain,ATATATAATA,axon targeting
+Gene_7,spleen,ATATATAAA,development
+Gene_8,heart,CGCCGGCCCC,development
+Gene_9,spleen,TGTGTGTAGAC,signaling
+Gene_10,brain,TGCTCGAACGT,axon targeting
