@@ -1,5 +1,7 @@
 
-import csv, sys
+import sys
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def filePrompt():
@@ -10,12 +12,12 @@ def termPrompt():
     term = input("Enter the term to return info on: ")
     return term
 
-def fileParse(file, searchTerm):
-    with open(file) as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if searchTerm in row:
-                print(row)
+def fileParse(f, searchTerm):
+    datafile = pd.read_csv(f, header=0)
+    print(datafile[datafile['gene_name'] == searchTerm]) # Specific row
+    print(datafile['function']) # Specific column
+
+
 
 def main():
     print("\nPython CSV Parser loaded.")
