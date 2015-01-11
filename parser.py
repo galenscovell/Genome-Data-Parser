@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 
 def filePrompt():
+    # Ask for file path and check that it exists
     file_path = input("Enter the file path ('path/to/file.csv'): ")
     if os.path.exists(file_path):
         return file_path
@@ -22,17 +23,23 @@ def filePrompt():
         print("Unable to locate file.\n")
         sys.exit()
 
+
 def termPrompt():
-    term = input("Enter the term to return info on: ")
+    # Ask for search term of interest
+    print("\nEnter the term to return info on")
+    term = input(" > ")
     return term
+
 
 def scanColumn(df):
     # Scan for unique elements in column, return percentage out of total
-    print("\nEnter the column header to return info on.")
-    columnName = input(" > ")
+    print("\nFollowing column headers found:")
+    print(df.columns)
+    print("\nEnter the column header to return info on")
+    column_name = input(" > ")
     column_list = []
     column_unique = []
-    for row in df[columnName]:
+    for row in df[column_name]:
         if row not in column_list:
             column_unique.append(row)
         column_list.append(row)
@@ -42,52 +49,45 @@ def scanColumn(df):
         print(element + ": %.2f %%" % percentage)
     print("---------------------")
 
-def fileParse(f, searchTerm):
-    df = pd.read_csv(f, header=0)
-    scanColumn(df)
 
-    # All column headers
-    #print(df.columns)
-    # All rows with term in column
-    #print(df[df.function == searchTerm])
-    # All data under specific column
-    #print(df.function)
-   # All data from specific number of rows
-    #print(df[:2])
-    # Search individual element
-    #for element in df.gene_name:
-        #if element == searchTerm:
-            #print(element)
-
+def searchRow(df, search):
+    # Return rows with term anywhere in columns
+    for column in df.columns:
+        if len(df[df[column] == search]) > 0:
+            print(df[df[column] == search])
+    
+    
 
 
 def main():
     f = filePrompt()
 
-    print("\n###### Python Data Parser loaded ######\n")
+    print("\n____________[ PYTHON DATA PARSER ]____________\n")
     if f.endswith('.csv'):
         dataframe = pd.read_csv(f, header=0)
     elif f.endswith('.xls') or f.endswith('.xlsx'):
         dataframe = pd.read_excel(f, header=0)
     else:
         print("File extension needs to be .csv, .xls, or .xlsx")
-        print("\n###### Python Data Parser finished ###### \n")
         sys.exit()
 
-    print("What would you like to do with the data?")
-    print("(Options: Scan [C]olumns, Search [R]ows, [E]xit)")
-    choice = ""
-    while choice != 'c' and choice != 'r':
-        choice = input(" > ")
-        if choice[0].lower() == 'c':
-            scanColumn(dataframe)
-        elif choice[0].lower() == 'r':
-            t = termPrompt()
-            fileParse(f, t)
-        else:
-            break
+    running = True
+    while running:
+        choice = " "
+        print("\nWhat would you like to do with the data?")
+        print("(Options: Scan [C]olumns, Search [R]ows, [E]xit)")
+        while choice[0].lower() != 'c' and choice[0].lower() != 'r':
+            choice = input(" > ")
+            if choice[0].lower() == 'c':
+                scanColumn(dataframe)
+            elif choice[0].lower() == 'r':
+                t = termPrompt()
+                searchRow(dataframe, t)
+            elif choice[0].lower() == 'e':
+                running = False
+                break
 
-    print("\n###### Python Data Parser finished ###### \n")
+    sys.exit()
 
 
 if __name__ == '__main__':
