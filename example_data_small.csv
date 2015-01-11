@@ -9,3 +9,42 @@ Gene_7,spleen,ATATATAAA,development
 Gene_8,heart,CGCCGGCCCC,development
 Gene_9,spleen,TGTGTGTAGAC,signaling
 Gene_10,brain,TGCTCGAACGT,axon targeting
+Gene_11,spleen,ACGTAGATCGC,development
+Gene_12,heart,CGCTCGAG,development
+Gene_13,brain,ACGTAGATCGC,signaling
+Gene_14,brain,CGCTCGAG,development
+Gene_15,heart,TGTCGCTGCC,signaling
+Gene_16,brain,AGATCGCTCGA,development
+Gene_17,spleen,CGCTGCTCGC,development
+Gene_18,heart,ATATATAATA,signaling
+Gene_19,spleen,ATATATAAA,development
+Gene_20,brain,CGCCGGCCCC,signaling
+Gene_21,spleen,ACGTAGATCGC,axon targeting
+Gene_22,spleen,CGCTCGAG,development
+Gene_23,spleen,TGTCGCTGCC,development
+Gene_24,spleen,ACGTAGATCGC,signaling
+Gene_25,heart,CGCTCGAG,axon targeting
+Gene_26,brain,TGTCGCTGCC,signaling
+Gene_27,spleen,AGATCGCTCGA,development
+Gene_28,heart,CGCTGCTCGC,signaling
+Gene_29,brain,ATATATAATA,development
+Gene_30,brain,ATATATAAA,signaling
+Gene_31,heart,CGCCGGCCCC,axon targeting
+Gene_32,spleen,TGTGTGTAGAC,development
+Gene_33,heart,TGCTCGAACGT,development
+Gene_34,brain,ACGTAGATCGC,signaling
+Gene_35,brain,CGCTCGAG,development
+Gene_36,spleen,ACGTAGATCGC,signaling
+Gene_37,heart,CGCTCGAG,axon targeting
+Gene_38,brain,TGTCGCTGCC,development
+Gene_39,spleen,AGATCGCTCGA,development
+Gene_40,heart,CGCTGCTCGC,development
+Gene_41,spleen,ATATATAATA,development
+Gene_42,heart,ACGTAGATCGC,signaling
+Gene_43,brain,CGCTCGAG,development
+Gene_44,brain,ACGTAGATCGC,signaling
+Gene_45,heart,CGCTCGAG,axon targeting
+Gene_46,brain,TGTCGCTGCC,development
+Gene_47,spleen,ACGTAGATCGC,development
+Gene_48,heart,CGCTCGAG,signaling
+Gene_49,brain,TGTCGCTGCC,axon targeting
