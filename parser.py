@@ -44,9 +44,21 @@ def scanColumn(df):
             column_unique.append(row)
         column_list.append(row)
     print("\n---------------------")
+
+    labels = []
+    sizes = []
+    colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
+    explode = []
+    for n in column_unique:
+        explode.append(0.1)
+
     for element in column_unique:
         percentage = column_list.count(element) / len(column_list) * 100
-        print(element + ": %.2f %%" % percentage)
+        labels.append(element)
+        sizes.append(percentage)
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
+    plt.axis('equal')
+    plt.show()
     print("---------------------")
 
 

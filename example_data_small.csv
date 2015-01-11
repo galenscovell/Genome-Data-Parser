@@ -1,20 +1,20 @@
 gene_name,location,sequence,function
 Gene_1,spleen,ACGTAGATCGC,development
-Gene_2,heart,CGCTCGAG,development
-Gene_3,brain,TGTCGCTGCC,signaling
+Gene_2,heart,CGCTCGAG,redundancy
+Gene_3,brain,TGTCGCTGCC,reproduction
 Gene_4,brain,AGATCGCTCGA,development
 Gene_5,heart,CGCTGCTCGC,signaling
 Gene_6,brain,ATATATAATA,axon targeting
 Gene_7,spleen,ATATATAAA,development
-Gene_8,heart,CGCCGGCCCC,development
+Gene_8,heart,CGCCGGCCCC,redundancy
 Gene_9,spleen,TGTGTGTAGAC,signaling
-Gene_10,brain,TGCTCGAACGT,axon targeting
+Gene_10,brain,TGCTCGAACGT,reproduction
 Gene_11,spleen,ACGTAGATCGC,development
 Gene_12,heart,CGCTCGAG,development
-Gene_13,brain,ACGTAGATCGC,signaling
-Gene_14,brain,CGCTCGAG,development
+Gene_13,brain,ACGTAGATCGC,redundancy
+Gene_14,brain,CGCTCGAG,reproduction
 Gene_15,heart,TGTCGCTGCC,signaling
-Gene_16,brain,AGATCGCTCGA,development
+Gene_16,brain,AGATCGCTCGA,redundancy
 Gene_17,spleen,CGCTGCTCGC,development
 Gene_18,heart,ATATATAATA,signaling
 Gene_19,spleen,ATATATAAA,development
@@ -26,7 +26,7 @@ Gene_24,spleen,ACGTAGATCGC,signaling
 Gene_25,heart,CGCTCGAG,axon targeting
 Gene_26,brain,TGTCGCTGCC,signaling
 Gene_27,spleen,AGATCGCTCGA,development
-Gene_28,heart,CGCTGCTCGC,signaling
+Gene_28,heart,CGCTGCTCGC,reproduction
 Gene_29,brain,ATATATAATA,development
 Gene_30,brain,ATATATAAA,signaling
 Gene_31,heart,CGCCGGCCCC,axon targeting
@@ -37,12 +37,12 @@ Gene_35,brain,CGCTCGAG,development
 Gene_36,spleen,ACGTAGATCGC,signaling
 Gene_37,heart,CGCTCGAG,axon targeting
 Gene_38,brain,TGTCGCTGCC,development
-Gene_39,spleen,AGATCGCTCGA,development
-Gene_40,heart,CGCTGCTCGC,development
-Gene_41,spleen,ATATATAATA,development
+Gene_39,spleen,AGATCGCTCGA,reproduction
+Gene_40,heart,CGCTGCTCGC,redundancy
+Gene_41,spleen,ATATATAATA,redundancy
 Gene_42,heart,ACGTAGATCGC,signaling
 Gene_43,brain,CGCTCGAG,development
-Gene_44,brain,ACGTAGATCGC,signaling
+Gene_44,brain,ACGTAGATCGC,reproduction
 Gene_45,heart,CGCTCGAG,axon targeting
 Gene_46,brain,TGTCGCTGCC,development
 Gene_47,spleen,ACGTAGATCGC,development
