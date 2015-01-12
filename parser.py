@@ -1,17 +1,18 @@
 '''
 Functions to implement:
-1. Find composition of columns (function, location) as percentages
+[X] 1. Find composition of columns (function, location) as percentages
     a. Create data representations
-2. Find individual row by search term
-3. Compare two rows next to one another by two search terms
-4. Output results to file for later viewing with date/time
+[X] 2. Find individual row by search term
+[ ] 3. Compare two rows next to one another by two search terms
+[ ] 4. Output results to file for later viewing with date/time
 '''
-
 
 
 import sys, os.path, xlrd
 import pandas as pd
 import matplotlib.pyplot as plt
+
+
 
 
 def filePrompt():
@@ -24,42 +25,50 @@ def filePrompt():
         sys.exit()
 
 
+def scanColumn(df):
+    # Scan for unique elements in column
+    column_entry = " "
+    header_info = list(df)
+    while column_entry not in header_info:
+        print("\nFollowing column headers found:")
+        print(header_info)
+        print("\nEnter the column header to return info on")
+        column_entry = input(" > ")
+    column_list = []
+    column_unique = []
+    for row in df[column_entry]:
+        if row not in column_list:
+            column_unique.append(row)
+        column_list.append(row)
+    
+    # Graph output init
+    labels = []
+    sizes = []
+    colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
+    explode = []
+
+    # Create 'explode' pie piece effect
+    for n in column_unique:
+        explode.append(0.05)
+
+    # Fill graph output with ratios of column of interest
+    for element in column_unique:
+        percentage = column_list.count(element) / len(column_list) * 100
+        labels.append(element)
+        sizes.append(percentage)
+
+    # Show completed graph
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
+    plt.axis('equal')
+    plt.show()
+    print("---------------------")
+
+
 def termPrompt():
     # Ask for search term of interest
     print("\nEnter the term to return info on")
     term = input(" > ")
     return term
-
-
-def scanColumn(df):
-    # Scan for unique elements in column, return percentage out of total
-    print("\nFollowing column headers found:")
-    print(df.columns)
-    print("\nEnter the column header to return info on")
-    column_name = input(" > ")
-    column_list = []
-    column_unique = []
-    for row in df[column_name]:
-        if row not in column_list:
-            column_unique.append(row)
-        column_list.append(row)
-    print("\n---------------------")
-
-    labels = []
-    sizes = []
-    colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
-    explode = []
-    for n in column_unique:
-        explode.append(0.1)
-
-    for element in column_unique:
-        percentage = column_list.count(element) / len(column_list) * 100
-        labels.append(element)
-        sizes.append(percentage)
-    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
-    plt.axis('equal')
-    plt.show()
-    print("---------------------")
 
 
 def searchRow(df, search):
@@ -99,6 +108,8 @@ def main():
                 running = False
                 break
 
+
+    print("\nClosing parser.\n")
     sys.exit()
 
 
