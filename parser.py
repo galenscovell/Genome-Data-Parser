@@ -7,11 +7,9 @@ Functions to implement:
 [ ] 4. Output results to file for later viewing with date/time
 '''
 
-
 import sys, os.path, xlrd
 import pandas as pd
 import matplotlib.pyplot as plt
-
 
 
 
@@ -58,10 +56,11 @@ def scanColumn(df):
         sizes.append(percentage)
 
     # Show completed graph
+    plt.rcParams['font.size'] = 9.0
     plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
     plt.axis('equal')
     plt.show()
-    print("---------------------")
+    print("\n---------------------")
 
 
 def termPrompt():
@@ -76,6 +75,7 @@ def searchRow(df, search):
     for column in df.columns:
         if len(df[df[column] == search]) > 0:
             print(df[df[column] == search])
+    print("\n---------------------")
     
     
 
@@ -91,11 +91,10 @@ def main():
     else:
         print("File extension needs to be .csv, .xls, or .xlsx")
         sys.exit()
-
     running = True
     while running:
         choice = " "
-        print("\nWhat would you like to do with the data?")
+        print("\nWhat would you like to do with '" + f + "'?")
         print("(Options: Scan [C]olumns, Search [R]ows, [E]xit)")
         while choice[0].lower() != 'c' and choice[0].lower() != 'r':
             choice = input(" > ")
@@ -109,7 +108,7 @@ def main():
                 break
 
 
-    print("\nClosing parser.\n")
+    print("\n______________[ CLOSING PARSER ]______________\n")
     sys.exit()
 
 
