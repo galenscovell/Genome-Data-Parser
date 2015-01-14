@@ -1,10 +1,17 @@
 '''
-Functions to implement:
-[X] 1. Find composition of columns (function, location) as percentages
-    a. Create data representations
+TODO:
+[X] 1. Find composition of columns as percentages
+    [X] a. Pie-chart representation
+    [ ] b. Using subarray terms
+        [ ] i. Visual representation of results
 [X] 2. Find individual row by search term
-[ ] 3. Compare two rows next to one another by two search terms
-[ ] 4. Output results to file for later viewing with date/time
+    [ ] a. Using subarray terms
+    [ ] b. Filter by further search terms
+[ ] 3. Search by column, filter results with further search terms
+    [ ] a. Using subarray terms
+[ ] 4. Output results (as CSV) and figures with date/time
+[ ] 5. Cmdline interface -> GUI
+[ ] 6. Create packaged executable for easy use across systems
 '''
 
 import sys, os.path, xlrd
@@ -14,7 +21,7 @@ import matplotlib.pyplot as plt
 
 
 def filePrompt():
-    # Ask for file path and check that it exists
+    # Ask for file path, check that file exists
     file_path = input("Enter the file path ('path/to/file.csv'): ")
     if os.path.exists(file_path):
         return file_path
@@ -39,7 +46,7 @@ def scanColumn(df):
             column_unique.append(row)
         column_list.append(row)
     
-    # Graph output init
+    # Pie-chart output init
     labels = []
     sizes = []
     colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
@@ -49,13 +56,13 @@ def scanColumn(df):
     for n in column_unique:
         explode.append(0.05)
 
-    # Fill graph output with ratios of column of interest
+    # Fill pie-chart output with ratios of column of interest
     for element in column_unique:
         percentage = column_list.count(element) / len(column_list) * 100
         labels.append(element)
         sizes.append(percentage)
 
-    # Show completed graph
+    # Show completed pie-chart
     plt.rcParams['font.size'] = 9.0
     plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
     plt.axis('equal')
@@ -91,10 +98,11 @@ def main():
     else:
         print("File extension needs to be .csv, .xls, or .xlsx")
         sys.exit()
+
     running = True
     while running:
         choice = " "
-        print("\nWhat would you like to do with '" + f + "'?")
+        print("\nFILE IN USE: " + f)
         print("(Options: Scan [C]olumns, Search [R]ows, [E]xit)")
         while choice[0].lower() != 'c' and choice[0].lower() != 'r':
             choice = input(" > ")
