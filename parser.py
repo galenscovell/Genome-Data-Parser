@@ -53,24 +53,25 @@ def createGraph(analyzed, total):
     plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
     plt.axis('equal')
     plt.show()
-    print("\n---------------------")
+    print("\n-------------------------")
 
 
-#def refine
-
-
-def scanColumn(df):
-    # Scan for all unique elements in column
+def pickColumn(df):
     column_choice = " "
     header_info = list(df)
     while column_choice not in header_info:
         print("\nFollowing column headers found:")
         print(header_info)
-        print("\n\tEnter column to return info on")
+        print("\n\tColumn of interest:")
         column_choice = input("\t > ")
+    return column_choice
+
+
+def scanColumn(df, chosenColumn):
+    # Scan for all unique elements in column
     column_total = []
     column_unique = []
-    for row in df[column_choice]:
+    for row in df[chosenColumn]:
         if row not in column_total:
             column_unique.append(row)
         column_total.append(row)
@@ -103,21 +104,35 @@ def termPrompt():
     return term
 
 
-def searchKeywords(df, search):
-    # Return rows with term anywhere in columns
-    # for column in df.columns:
-    #     if len(df[df[column] == search]) > 0:
-    #         print(df[df[column] == search])
-    #     else:
-    #         print("No results found for '" + search + "' in '" + column + "'")
+def searchKeyword(df, chosenColumn, search):
+    row_index = -1
+    row_list = []
+    results = 0
+    for row in df[chosenColumn]:
+        row_index += 1
+        if ';' in row:
+            row_subarray = row.split(';')
+            if search in row_subarray:
+                results += 1
+                row_list.append(row_index)
+        else:
+            if search in row:
+                results += 1
+                row_list.append(row_index)
+
+    if results > 0:
+        for index in row_list:
+            print("\n\n\t---------------Row index:", index, "---------------")
+            print(df.irow(index))
+        print("\n\n[", results, "results found for '" + search + "' in '" + chosenColumn + "' ]")
+        print("\tIndices:", row_list)
+    else:
+        print("\n\n[ No results found for '" + search + "' in ' ]" + chosenColumn + "']")
+
     
-    print(len(df))
-    for row in df.Keywords:
-        if type(row) is str and ';' in row:
-                row_subarray = row.split(';')
-                if search in row_subarray:
-                    print(df[row].iloc)
-    print("\n---------------------")
+
+    # searched_data.to_csv("results/searched.csv")
+    print("\n-------------------------")
     
     
 
@@ -142,10 +157,12 @@ def main():
         while choice[0].lower() not in ('c', 'k', 'e'):
             choice = input(" > ")
             if choice[0].lower() == 'c':
-                scanColumn(dataframe)
+                column = pickColumn(dataframe)
+                scanColumn(dataframe, column)
             elif choice[0].lower() == 'k':
+                column = pickColumn(dataframe)
                 t = termPrompt()
-                searchKeywords(dataframe, t)
+                searchKeyword(dataframe, column, t)
             elif choice[0].lower() == 'e':
                 running = False
                 break
