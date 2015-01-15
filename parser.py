@@ -1,21 +1,23 @@
 '''
 TODO:
-[X] 1. Find composition of columns as percentages
-    [X] a. Pie-chart representation
-    [ ] b. Using subarray terms
-        [ ] i. Visual representation of results
-[X] 2. Find individual row by search term
-    [ ] a. Using subarray terms
-    [ ] b. Filter by further search terms
-[ ] 3. Search by column, filter results with further search terms
-    [ ] a. Using subarray terms
-[ ] 4. Output results (as CSV) and figures with date/time
-[ ] 5. Cmdline interface -> GUI
-[ ] 6. Create packaged executable for easy use across systems
+[X] 1. Search rows by column
+    [X] a. Using sub-array terms
+    [X] b. Filter by further search terms (refinement)
+    [X] c. Output results as CSV
+
+[.] 2. Scan composition of columns
+    [X] a. Pie-chart creation
+    [ ] b. Ratio of rows containing keyword within column
+        [ ] i. Using subarray terms
+    [ ] c. Output figures
+
+[ ] 3. Cmdline interface -> GUI
+[ ] 4. Create packaged executable for easy use across systems
 '''
 
-import sys, os.path, xlrd
+import sys, os.path, xlrd, time
 import pandas as pd
+from pandas import DataFrame, Series
 import matplotlib.pyplot as plt
 
 
@@ -29,6 +31,13 @@ def filePrompt():
     else:
         print("\tUnable to locate file.\n")
         sys.exit()
+
+
+def fileOutput(final_df):
+    save_name = input("\n\tFile name for output: ")
+    file_path = "results/" + time.strftime("%d_%m_%Y__") + save_name + ".csv"
+    final_df.to_csv(file_path)
+    print("\n-------------------------")
 
 
 def createGraph(analyzed, total):
@@ -57,12 +66,13 @@ def createGraph(analyzed, total):
 
 
 def pickColumn(df):
+    # Pick column from available headers
     column_choice = " "
     header_info = list(df)
+    print("\nFollowing column headers found:")
+    print(header_info)
+    print("\n\tColumn of interest:")
     while column_choice not in header_info:
-        print("\nFollowing column headers found:")
-        print(header_info)
-        print("\n\tColumn of interest:")
         column_choice = input("\t > ")
     return column_choice
 
@@ -76,24 +86,15 @@ def scanColumn(df, chosenColumn):
             column_unique.append(row)
         column_total.append(row)
 
-    filter_decision = " "
-    while filter_decision[0].lower() not in ('d', 'r'):
-        print("\n\tAnalyze this data or further refine?")
-        print("\t(Options: [D]one or [R]efine)")
-        filter_decision = input("\t > ")
-        if filter_decision[0].lower() == 'd':
-            break
-        else:
-            print("\tRefinement here.")
-
-    graph_choice = " "
-    while graph_choice[0].lower() not in ('y', 'n'):
-        print("\n\tCreate pie-chart with collected data (Y/N)?")
-        graph_choice = input("\t > ")
-        if graph_choice[0].lower() == 'y':
-            createGraph(column_unique, column_total)
-        else:
-            break
+    graph = " "
+    print("\n\tCreate pie-chart with collected data (Y/N)?")
+    while len(graph) == 0 or graph[0].lower() not in ('y', 'n'):
+        graph = input("\t > ")
+        if len(graph) > 0:
+            if graph[0].lower() == 'y':
+                createGraph(column_unique, column_total)
+            elif graph[0].lower() == 'n':
+                break
 
 
 def termPrompt():
@@ -127,11 +128,26 @@ def searchKeyword(df, chosenColumn, search):
         print("\n\n[", results, "results found for '" + search + "' in '" + chosenColumn + "' ]")
         print("\tIndices:", row_list)
     else:
-        print("\n\n[ No results found for '" + search + "' in ' ]" + chosenColumn + "']")
+        print("\n\n[ No results found for '" + search + "' in '" + chosenColumn + "']")
 
-    
+    searched_data = []
+    for index in row_list:
+        searched_data.append(df.irow(index))
+    new_df = pd.DataFrame(data=searched_data)
 
-    # searched_data.to_csv("results/searched.csv")
+    refine = " "
+    print("\n\tOutput this data or further refine?")
+    print("\t(Options: [O]utput or [R]efine)")
+    while len(refine) == 0 or refine[0].lower() not in ('o', 'r'):
+        refine = input("\t > ")
+        if len(refine) > 0:
+            if refine[0].lower() == 'o':
+                fileOutput(new_df)
+            elif refine[0].lower() == 'r':
+                new_column = pickColumn(new_df)
+                new_t = termPrompt()
+                searchKeyword(new_df, new_column, new_t)
+
     print("\n-------------------------")
     
     
@@ -140,7 +156,7 @@ def searchKeyword(df, chosenColumn, search):
 def main():
     f = filePrompt()
 
-    print("\n____________[ PYTHON DATA PARSER ]____________\n")
+    print("\n____________[ GENOMIC DATA PARSER ]____________\n")
     if f.endswith('.csv'):
         dataframe = pd.read_csv(f, header=0)
     elif f.endswith('.xls') or f.endswith('.xlsx'):
@@ -154,18 +170,19 @@ def main():
         choice = " "
         print("\nFILE IN USE: " + f + " (" + str(len(dataframe)) + " rows)")
         print("(Options: Scan [C]olumns, Search [K]eyword, [E]xit)")
-        while choice[0].lower() not in ('c', 'k', 'e'):
+        while len(choice) == 0 or choice[0].lower() not in ('c', 'k', 'e'):
             choice = input(" > ")
-            if choice[0].lower() == 'c':
-                column = pickColumn(dataframe)
-                scanColumn(dataframe, column)
-            elif choice[0].lower() == 'k':
-                column = pickColumn(dataframe)
-                t = termPrompt()
-                searchKeyword(dataframe, column, t)
-            elif choice[0].lower() == 'e':
-                running = False
-                break
+            if len(choice) > 0:
+                if choice[0].lower() == 'c':
+                    column = pickColumn(dataframe)
+                    scanColumn(dataframe, column)
+                elif choice[0].lower() == 'k':
+                    column = pickColumn(dataframe)
+                    t = termPrompt()
+                    searchKeyword(dataframe, column, t)
+                elif choice[0].lower() == 'e':
+                    running = False
+                    break
 
 
     print("\n______________[ CLOSING PARSER ]______________\n")
