@@ -4,6 +4,7 @@ TODO:
     [X] a. Using sub-array terms
     [X] b. Filter by further search terms (refinement)
     [X] c. Output results as CSV
+        [X] i. Dated folder organization, user save name
 
 [.] 2. Scan composition of columns
     [X] a. Pie-chart creation
@@ -34,8 +35,13 @@ def filePrompt():
 
 
 def fileOutput(final_df):
-    save_name = input("\n\tFile name for output: ")
-    file_path = "results/" + time.strftime("%d_%m_%Y__") + save_name + ".csv"
+    save_name = ""
+    while len(save_name) == 0:
+        save_name = input("\n\tSave file as: ")
+    save_path = "results/" + time.strftime("%d_%m_%Y") + "/"
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    file_path = save_path + save_name + ".csv"
     final_df.to_csv(file_path)
     print("\n-------------------------")
 
