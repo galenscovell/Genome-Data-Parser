@@ -18,13 +18,13 @@ TODO:
 
 import sys, os.path, xlrd, time
 import pandas as pd
-from pandas import DataFrame, Series
+from pandas import DataFrame
 import matplotlib.pyplot as plt
 
 
 
 
-def filePrompt():
+def file_prompt():
     # Ask for file path, check that file exists
     file_path = input("Enter the file path ('path/to/file.csv'): ")
     if os.path.exists(file_path):
@@ -34,7 +34,7 @@ def filePrompt():
         sys.exit()
 
 
-def fileOutput(final_df):
+def file_output(final_df):
     save_name = ""
     while len(save_name) == 0:
         save_name = input("\n\tSave file as: ")
@@ -43,27 +43,21 @@ def fileOutput(final_df):
         os.makedirs(save_path)
     file_path = save_path + save_name + ".csv"
     final_df.to_csv(file_path)
-    print("\n-------------------------")
 
 
-def createGraph(analyzed, total):
-    # Pie-chart output init
+def create_graph(analyzed, total):
     labels = []
     sizes = []
     colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
     explode = []
-
-    # Create 'explode' pie piece effect
     for n in analyzed:
         explode.append(0.05)
 
-    # Fill pie-chart output with ratios of column of interest
     for element in analyzed:
         percentage = total.count(element) / len(total) * 100
         labels.append(element)
         sizes.append(percentage)
 
-    # Display completed pie-chart
     plt.rcParams['font.size'] = 9.0
     plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
     plt.axis('equal')
@@ -71,7 +65,7 @@ def createGraph(analyzed, total):
     print("\n-------------------------")
 
 
-def pickColumn(df):
+def pick_column(df):
     # Pick column from available headers
     column_choice = " "
     header_info = list(df)
@@ -83,11 +77,11 @@ def pickColumn(df):
     return column_choice
 
 
-def scanColumn(df, chosenColumn):
+def scan_column(df, chosen_column):
     # Scan for all unique elements in column
     column_total = []
     column_unique = []
-    for row in df[chosenColumn]:
+    for row in df[chosen_column]:
         if row not in column_total:
             column_unique.append(row)
         column_total.append(row)
@@ -98,12 +92,12 @@ def scanColumn(df, chosenColumn):
         graph = input("\t > ")
         if len(graph) > 0:
             if graph[0].lower() == 'y':
-                createGraph(column_unique, column_total)
+                create_graph(column_unique, column_total)
             elif graph[0].lower() == 'n':
                 break
 
 
-def termPrompt():
+def term_prompt():
     # Ask for search term of interest
     print("\n\tEnter search term")
     term = input("\t > ")
@@ -111,11 +105,12 @@ def termPrompt():
     return term
 
 
-def searchKeyword(df, chosenColumn, search):
+def search_keyword(df, chosen_column, search):
+    # Return all rows with term in specified column
     row_index = -1
     row_list = []
     results = 0
-    for row in df[chosenColumn]:
+    for row in df[chosen_column]:
         row_index += 1
         if ';' in row:
             row_subarray = row.split(';')
@@ -129,12 +124,12 @@ def searchKeyword(df, chosenColumn, search):
 
     if results > 0:
         for index in row_list:
-            print("\n\n\t---------------Row index:", index, "---------------")
+            print("\n\n---------------------Row index:", index, "---------------")
             print(df.irow(index))
-        print("\n\n[", results, "results found for '" + search + "' in '" + chosenColumn + "' ]")
+        print("\n\n[", results, "results found for '" + search + "' in '" + chosen_column + "' ]")
         print("\tIndices:", row_list)
     else:
-        print("\n\n[ No results found for '" + search + "' in '" + chosenColumn + "']")
+        print("\n\n[ No results found for '" + search + "' in '" + chosen_column + "']")
 
     searched_data = []
     for index in row_list:
@@ -148,19 +143,18 @@ def searchKeyword(df, chosenColumn, search):
         refine = input("\t > ")
         if len(refine) > 0:
             if refine[0].lower() == 'o':
-                fileOutput(new_df)
+                file_output(new_df)
             elif refine[0].lower() == 'r':
-                new_column = pickColumn(new_df)
-                new_t = termPrompt()
-                searchKeyword(new_df, new_column, new_t)
-
+                new_column = pick_column(new_df)
+                new_t = term_prompt()
+                search_keyword(new_df, new_column, new_t)
     print("\n-------------------------")
     
     
 
 
 def main():
-    f = filePrompt()
+    f = file_prompt()
 
     print("\n____________[ GENOMIC DATA PARSER ]____________\n")
     if f.endswith('.csv'):
@@ -180,12 +174,12 @@ def main():
             choice = input(" > ")
             if len(choice) > 0:
                 if choice[0].lower() == 'c':
-                    column = pickColumn(dataframe)
-                    scanColumn(dataframe, column)
+                    column = pick_column(dataframe)
+                    scan_column(dataframe, column)
                 elif choice[0].lower() == 'k':
-                    column = pickColumn(dataframe)
-                    t = termPrompt()
-                    searchKeyword(dataframe, column, t)
+                    column = pick_column(dataframe)
+                    t = term_prompt()
+                    search_keyword(dataframe, column, t)
                 elif choice[0].lower() == 'e':
                     running = False
                     break
