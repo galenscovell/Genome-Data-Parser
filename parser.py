@@ -8,8 +8,8 @@ TODO:
 
 [.] 2. Scan composition of columns
     [X] a. Pie-chart creation
-    [ ] b. Ratio of rows containing keyword within column
-        [ ] i. Using subarray terms
+    [X] b. Ratio of rows containing keyword within column
+        [X] i. Using subarray terms
     [ ] c. Output figures
 
 [ ] 3. Cmdline interface -> GUI
@@ -48,19 +48,24 @@ def file_output(final_df):
 def create_graph(analyzed, total):
     labels = []
     sizes = []
-    colors = ['#2ecc71', '#f1c40f', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
-    explode = []
-    for n in analyzed:
-        explode.append(0.05)
-
-    for element in analyzed:
-        percentage = total.count(element) / len(total) * 100
-        labels.append(element)
-        sizes.append(percentage)
+    colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
+    
+    if type(analyzed) is list:
+        for element in analyzed:
+            percentage = (total.count(element) / len(total)) * 100
+            title = element + ': ' + str(round(percentage, 2)) + '%'
+            labels.append(title)
+            sizes.append(percentage)
+    else:
+        percentage = (analyzed / total) * 100
+        labels = ['Searched: ' + str(round(percentage, 2)) + '%', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
+        sizes = [percentage, 100 - percentage]
 
     plt.rcParams['font.size'] = 9.0
-    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.2f%%', shadow=True, startangle=90)
+    patches, texts = plt.pie(sizes, colors=colors, startangle=0)
+    plt.legend(patches, labels, loc="best")
     plt.axis('equal')
+    plt.tight_layout()
     plt.show()
     print("\n-------------------------")
 
@@ -105,49 +110,59 @@ def term_prompt():
     return term
 
 
-def search_keyword(df, chosen_column, search):
+def search_keyword(df, chosen_column, search_term, total_length):
     # Return all rows with term in specified column
     row_index = -1
     row_list = []
-    results = 0
+    search_results = 0
     for row in df[chosen_column]:
         row_index += 1
-        if ';' in row:
+        if type(row) is list and ';' in row:
             row_subarray = row.split(';')
-            if search in row_subarray:
-                results += 1
+            if search_term in row_subarray:
+                search_results += 1
                 row_list.append(row_index)
         else:
-            if search in row:
-                results += 1
+            if search_term in row:
+                search_results += 1
                 row_list.append(row_index)
 
-    if results > 0:
+    if search_results > 0:
         for index in row_list:
             print("\n\n---------------------Row index:", index, "---------------")
             print(df.irow(index))
-        print("\n\n[", results, "results found for '" + search + "' in '" + chosen_column + "' ]")
-        print("\tIndices:", row_list)
+        print("\n\n[", search_results, "results found for '" + search_term + "' in '" + chosen_column + "' ]")
+        # print("\tIndices:", row_list)
     else:
-        print("\n\n[ No results found for '" + search + "' in '" + chosen_column + "']")
+        print("\n\n[ No results found for '" + search_term + "' in '" + chosen_column + "']")
 
     searched_data = []
     for index in row_list:
         searched_data.append(df.irow(index))
     new_df = pd.DataFrame(data=searched_data)
 
+    graph = " "
+    print("\n\tCreate pie-chart with collected data (Y/N)?")
+    while len(graph) == 0 or graph[0].lower() not in ('y', 'n'):
+        graph = input("\t > ")
+        if len(graph) > 0:
+            if graph[0].lower() == 'y':
+                create_graph(search_results, total_length)
+            elif graph[0].lower() == 'n':
+                break
+
     refine = " "
-    print("\n\tOutput this data or further refine?")
-    print("\t(Options: [O]utput or [R]efine)")
-    while len(refine) == 0 or refine[0].lower() not in ('o', 'r'):
+    print("\n\tSave this data or further refine?")
+    print("\t(Options: [S]ave or [R]efine)")
+    while len(refine) == 0 or refine[0].lower() not in ('s', 'r'):
         refine = input("\t > ")
         if len(refine) > 0:
-            if refine[0].lower() == 'o':
+            if refine[0].lower() == 's':
                 file_output(new_df)
             elif refine[0].lower() == 'r':
                 new_column = pick_column(new_df)
                 new_t = term_prompt()
-                search_keyword(new_df, new_column, new_t)
+                search_keyword(new_df, new_column, new_t, total_length)
     print("\n-------------------------")
     
     
@@ -179,7 +194,7 @@ def main():
                 elif choice[0].lower() == 'k':
                     column = pick_column(dataframe)
                     t = term_prompt()
-                    search_keyword(dataframe, column, t)
+                    search_keyword(dataframe, column, t, len(dataframe))
                 elif choice[0].lower() == 'e':
                     running = False
                     break
