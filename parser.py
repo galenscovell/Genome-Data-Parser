@@ -67,7 +67,7 @@ def create_graph(analyzed, total):
     plt.axis('equal')
     plt.tight_layout()
     plt.show()
-    print("\n-------------------------")
+    print("\nChart Output-------------------------")
 
 
 def pick_column(df):
@@ -104,7 +104,7 @@ def scan_column(df, chosen_column):
 
 def term_prompt():
     # Ask for search term of interest
-    print("\n\tEnter search term")
+    print("\n\tEnter search term:")
     term = input("\t > ")
     print("")
     return term
@@ -127,14 +127,21 @@ def search_keyword(df, chosen_column, search_term, total_length):
                 search_results += 1
                 row_list.append(row_index)
 
-    if search_results > 0:
-        for index in row_list:
-            print("\n\n---------------------Row index:", index, "---------------")
-            print(df.irow(index))
-        print("\n\n[", search_results, "results found for '" + search_term + "' in '" + chosen_column + "' ]")
-        # print("\tIndices:", row_list)
-    else:
-        print("\n\n[ No results found for '" + search_term + "' in '" + chosen_column + "']")
+    output_choice = " "
+    print("\tShow output (Y/N)?")
+    while len(output_choice) == 0 or output_choice[0].lower() not in ('y', 'n'):
+        output_choice = input("\t > ")
+        if output_choice[0].lower() == 'y':
+            if search_results > 0:
+                for index in row_list:
+                    print("\n\n---------------------Row index:", index, "---------------")
+                    print(df.irow(index))
+                print("\n\n[", search_results, "results found for '" + search_term + "' in '" + chosen_column + "' ]")
+                # print("\tIndices:", row_list)
+            else:
+                print("\n\n[ No results found for '" + search_term + "' in '" + chosen_column + "']")
+        elif output_choice[0].lower() == 'n':
+            break
 
     searched_data = []
     for index in row_list:
@@ -152,8 +159,7 @@ def search_keyword(df, chosen_column, search_term, total_length):
                 break
 
     refine = " "
-    print("\n\tSave this data or further refine?")
-    print("\t(Options: [S]ave or [R]efine)")
+    print("\n\t[S]ave this data or [R]efine?")
     while len(refine) == 0 or refine[0].lower() not in ('s', 'r'):
         refine = input("\t > ")
         if len(refine) > 0:
