@@ -1,6 +1,6 @@
 # Genome-Data-Parser
 
-This repository is dedicated to the design and construction of a genomic data parser for the Tublitz Neuroscience lab at the University of Oregon. All of the actual genomic data is hidden and private, and depending on how things play out the final version of this parser may also be made private.
+This repository is dedicated to the design and construction of a genomic data parser for the Tublitz Neuroscience lab at the University of Oregon. All of the actual genomic data is hidden, and depending on how things play out the final version of this parser may also be made private.
 
 Utilizes:
 * <b>Pandas</b> for handling CSV data 
@@ -11,9 +11,9 @@ Utilizes:
 
 Features:
 * Works with all csv/xls/xlsx data files
-* Search across all column rows by keyword, including rows containing sub-arrays
+* Search across all column rows by keyword, including rows containing sub-arrays (separated by ;)
 * Refine data through additional searches across columns
 * Pie-chart output for representations of data composition
 * Output final data as CSV in auto-dated folders with user-entered save names
 
-The end goal is a multifaceted interface for combing through very large sets of data with visuals describing terms of interest.
+The end goal is a multifaceted interface for combing through very large sets of data with optional visuals describing terms of interest.
