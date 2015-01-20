@@ -6,7 +6,7 @@ TODO:
     [X] c. Output results as CSV
         [X] i. Dated folder organization, user save name
 
-[.] 2. Scan composition of columns
+[.] 2. Scan composition of column
     [X] a. Pie-chart creation
     [X] b. Ratio of rows containing keyword within column
         [X] i. Using subarray terms
@@ -20,6 +20,8 @@ import sys, os.path, xlrd, time
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+from PyQt4 import QtGui
+from interface import Interface
 
 
 
@@ -76,7 +78,7 @@ def pick_column(df):
     header_info = list(df)
     print("\nFollowing column headers found:")
     print(header_info)
-    print("\n\tColumn of interest:")
+    print("\n\tColumn of interest (case-sensitive):")
     while column_choice not in header_info:
         column_choice = input("\t > ")
     return column_choice
@@ -104,7 +106,7 @@ def scan_column(df, chosen_column):
 
 def term_prompt():
     # Ask for search term of interest
-    print("\n\tEnter search term:")
+    print("\n\tEnter search term (case-sensitive):")
     term = input("\t > ")
     print("")
     return term
@@ -175,6 +177,11 @@ def search_keyword(df, chosen_column, search_term, total_length):
 
 
 def main():
+
+    app = QtGui.QApplication(sys.argv)
+    window = Interface()
+    sys.exit(app.exec_())
+
     f = file_prompt()
 
     print("\n____________[ GENOMIC DATA PARSER ]____________\n")
