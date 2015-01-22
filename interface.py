@@ -1,25 +1,38 @@
 
-from PyQt4 import QtGui, QtCore
+from tkinter import *
+from tkinter import ttk
 
-class Interface(QtGui.QWidget):
-    def __init__(self):
-        super(Interface, self).__init__()
-        self.initUI()
+def calculate(*args):
+    try:
+        value = float(feet.get())
+        meters.set((0.3048 * value * 10000.0 + 0.5)/10000.0)
+    except ValueError:
+        pass
 
-    def initUI(self):
-        quitbtn = QtGui.QPushButton('Quit', self)
-        quitbtn.clicked.connect(QtCore.QCoreApplication.instance().quit)
-        quitbtn.resize(quitbtn.sizeHint())
-        quitbtn.move(50, 50)
+root = Tk()
+root.title("Feet to Meters")
 
-        self.resize(600, 480)
-        self.center()
-        self.setWindowTitle('Genome Data Parser')
-        self.setWindowIcon(QtGui.QIcon('icon.gif'))
-        self.show()
+mainframe = ttk.Frame(root, padding="3 3 12 12")
+mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+mainframe.columnconfigure(0, weight=1)
+mainframe.rowconfigure(0, weight=1)
 
-    def center(self):
-        window_frame = self.frameGeometry()
-        screen_res = QtGui.QDesktopWidget().availableGeometry().center()
-        window_frame.moveCenter(screen_res)
-        self.move(window_frame.topLeft())
+feet = StringVar()
+meters = StringVar()
+
+feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
+feet_entry.grid(column=2, row=1, sticky=(W, E))
+
+ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
+ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+
+ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
+ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
+ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+
+for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
+
+feet_entry.focus()
+root.bind('<Return>', calculate)
+
+root.mainloop()

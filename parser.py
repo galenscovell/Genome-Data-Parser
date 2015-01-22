@@ -20,7 +20,6 @@ import sys, os.path, xlrd, time
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-from PyQt4 import QtGui
 from interface import Interface
 
 
@@ -177,10 +176,6 @@ def search_keyword(df, chosen_column, search_term, total_length):
 
 
 def main():
-
-    app = QtGui.QApplication(sys.argv)
-    window = Interface()
-    sys.exit(app.exec_())
 
     f = file_prompt()
 

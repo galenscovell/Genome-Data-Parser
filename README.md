@@ -5,7 +5,7 @@ This repository is dedicated to the design and construction of a genomic data pa
 Utilizes:
 * <b>Pandas</b> for handling CSV data 
 * <b>XLRD</b> module for backup Excel support
-* <b>PyQT4</b> for GUI creation
+* <b>tkinter</b> for GUI creation
 * <b>Matplotlib</b> for statistical representations
 * <b>Py2exe</b> for executable construction
 
