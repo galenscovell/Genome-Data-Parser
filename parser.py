@@ -6,11 +6,11 @@ TODO:
     [X] c. Output results as CSV
         [X] i. Dated folder organization, user save name
 
-[.] 2. Scan composition of column
+[X] 2. Scan composition of column
     [X] a. Pie-chart creation
     [X] b. Ratio of rows containing keyword within column
         [X] i. Using subarray terms
-    [ ] c. Output figures
+    [X] c. Output figures
 
 [ ] 3. Cmdline interface -> GUI
 [ ] 4. Create packaged executable for easy use across systems
@@ -20,7 +20,6 @@ import sys, os.path, xlrd, time
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-from interface import Interface
 
 
 

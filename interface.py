@@ -5,18 +5,22 @@ from tkinter.filedialog import askopenfilename
 
 
 class OpenFileWindow():
-    def __init__(self, root):
+    def __init__(self, root, scr_w, scr_h):
         self.root = root
         self.root.title("Genome Data Parser")
+        win_w, win_h = 300, 200
+        self.x = (scr_w / 2) - (win_w / 2)
+        self.y = (scr_h / 2) - (win_h / 2)
+        self.root.geometry('%dx%d+%d+%d' % (win_w, win_h, self.x, self.y))
 
         # Widgets
         self.frame = ttk.Frame(self.root, padding=20)
         self.label = ttk.Label(self.frame, anchor=CENTER, text="Choose the file to open:")
         self.entry = Text(self.frame, width=40, height=2)
-        self.exit_button = ttk.Button(self.frame, text='Exit', command='', width=16)
-        self.exit_button.state(['disabled'])
-        self.open_button = ttk.Button(self.frame, text='Open', command='', width=16)
-        # browser = askopenfilename(parent=root)
+
+        self.exit_button = ttk.Button(self.frame, text='Exit', command=self.close_window, width=16)
+        # self.exit_button.state(['disabled'])
+        self.open_button = ttk.Button(self.frame, text='Open', command=self.file_browser, width=16)
 
         # Layout
         self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -37,19 +41,30 @@ class OpenFileWindow():
         self.frame.rowconfigure(3, weight=3, pad=6)
 
     def close_window(self):
-        print("Nothin' yet")
+        self.root.destroy()
+
+    def file_browser(self):
+        browser = askopenfilename(parent=self.root)
 
 
 class MainWindow():
-    def __init__(self, root):
+    def __init__(self, root, scr_w, scr_h):
         self.root = root
+        self.root.title("Genome Data Parser")
+        win_w, win_h = 600, 480
+        self.x = (scr_w / 2) - (win_w / 2)
+        self.y = (scr_h / 2) - (win_h / 2)
+        self.root.geometry('%dx%d+%d+%d' % (win_w, win_h, self.x, self.y))
 
 
 
 
 def main():
     root = Tk()
-    app = OpenFileWindow(root)
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    app = OpenFileWindow(root, screen_width, screen_height)
+
     root.mainloop()
 
 
