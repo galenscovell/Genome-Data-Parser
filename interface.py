@@ -4,41 +4,63 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 
 
-class OpenFileWindow():
-    def __init__(self, root, scr_w, scr_h):
+class MainWindow():
+    def __init__(self, root):
         self.root = root
-        self.root.title("Genome Data Parser")
-        win_w, win_h = 300, 200
-        self.x = (scr_w / 2) - (win_w / 2)
-        self.y = (scr_h / 2) - (win_h / 2)
-        self.root.geometry('%dx%d+%d+%d' % (win_w, win_h, self.x, self.y))
 
         # Widgets
-        self.frame = ttk.Frame(self.root, padding=20)
-        self.label = ttk.Label(self.frame, anchor=CENTER, text="Choose the file to open:")
-        self.entry = Text(self.frame, width=40, height=2)
+        self.mainframe = ttk.Frame(self.root, padding=10)
 
-        self.exit_button = ttk.Button(self.frame, text='Exit', command=self.close_window, width=16)
+        self.consoleframe = ttk.Frame(self.mainframe, padding=10)
+        self.consoleframe['borderwidth'] = 2
+        self.consoleframe['relief'] = 'solid'
+
+        self.console_label = ttk.Label(self.consoleframe, text="Console Output:")
+
+        self.console_text = Text(self.consoleframe, width=60, height=20)
+
+        self.button_frame = ttk.Frame(self.mainframe)
+        self.button_frame['borderwidth'] = 2
+        self.button_frame['relief'] = 'solid'
+
+
+        self.option_label = ttk.Label(self.button_frame, text="Open some data!")
+
+        self.exit_button = ttk.Button(self.button_frame, width=18, text='Exit', command=self.close_window)
         # self.exit_button.state(['disabled'])
-        self.open_button = ttk.Button(self.frame, text='Open', command=self.file_browser, width=16)
+        self.open_button = ttk.Button(self.button_frame, width=18, text='Open', command=self.file_browser)
+
 
         # Layout
-        self.frame.grid(column=0, row=0, sticky=(N, W, E, S))
-        self.label.grid(column=1, row=1)
-        self.entry.grid(column=1, row=2)
-        self.open_button.grid(column=1, row=3, sticky=W)
-        self.exit_button.grid(column=1, row=3, sticky=E)
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.consoleframe.grid(column=0, row=0, sticky=N)
+        self.button_frame.grid(column=0, row=3, columnspan=3, sticky=S)
+
+        self.console_label.grid(column=0, row=0, sticky=W)
+        self.console_text.grid(column=0, row=2)
+
+        self.option_label.grid(column=1, row=0, pady=(0, 10))
+        self.open_button.grid(column=0, row=1, padx=(0, 10), sticky=W)
+        self.exit_button.grid(column=2, row=1, padx=(10, 0), sticky=E)
+
 
         # Grid Configuration
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=3)
-        self.frame.columnconfigure(1, weight=3)
-        self.frame.columnconfigure(2, weight=3)
-        self.frame.rowconfigure(0, weight=3)
-        self.frame.rowconfigure(1, weight=3)
-        self.frame.rowconfigure(2, weight=3, pad=6)
-        self.frame.rowconfigure(3, weight=3, pad=6)
+
+        self.mainframe.columnconfigure(0, weight=3)
+        self.mainframe.rowconfigure(0, weight=3)
+        self.mainframe.rowconfigure(1, weight=3)
+
+        self.consoleframe.columnconfigure(0, weight=3)
+        self.consoleframe.rowconfigure(0, weight=3)
+
+        self.button_frame.columnconfigure(0, weight=3)
+        self.button_frame.columnconfigure(1, weight=3)
+        self.button_frame.columnconfigure(2, weight=3)
+        self.button_frame.rowconfigure(0, weight=3)
+        self.button_frame.rowconfigure(1, weight=3)
+
 
     def close_window(self):
         self.root.destroy()
@@ -47,24 +69,28 @@ class OpenFileWindow():
         browser = askopenfilename(parent=self.root)
 
 
-class MainWindow():
-    def __init__(self, root, scr_w, scr_h):
+class FigureWindow():
+    def __init__(self, root):
         self.root = root
-        self.root.title("Genome Data Parser")
-        win_w, win_h = 600, 480
-        self.x = (scr_w / 2) - (win_w / 2)
-        self.y = (scr_h / 2) - (win_h / 2)
-        self.root.geometry('%dx%d+%d+%d' % (win_w, win_h, self.x, self.y))
 
 
 
 
 def main():
     root = Tk()
+    img = PhotoImage(file='icon.gif')
+    root.call('wm', 'iconphoto', root._w, '-default', img)
+    root.title('Genome Data Parser')
+
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    app = OpenFileWindow(root, screen_width, screen_height)
+    window_width, window_height = 600, 480
+    x = (screen_width / 2) - (window_width / 2)
+    y = (screen_height / 2) - (window_height / 2)
+    root.geometry('%dx%d+%d+%d' % (window_width, window_height, x, y))
+    root.resizable(FALSE, FALSE)
 
+    app = MainWindow(root)
     root.mainloop()
 
 
