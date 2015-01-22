@@ -2,37 +2,38 @@
 from tkinter import *
 from tkinter import ttk
 
-def calculate(*args):
-    try:
-        value = float(feet.get())
-        meters.set((0.3048 * value * 10000.0 + 0.5)/10000.0)
-    except ValueError:
-        pass
 
+# Initial window setup
 root = Tk()
-root.title("Feet to Meters")
+root.title("Genome Data Parser")
 
-mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-mainframe.columnconfigure(0, weight=1)
-mainframe.rowconfigure(0, weight=1)
 
-feet = StringVar()
-meters = StringVar()
+# Main content frame, height/width determined by inner content
+content_frame = ttk.Frame(root, padding=20)
+content_frame.grid(column=0, row=0, sticky=(N, W, E, S))
+content_frame.columnconfigure(0, weight=1)
+content_frame.rowconfigure(0, weight=1)
 
-feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-feet_entry.grid(column=2, row=1, sticky=(W, E))
 
-ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
-ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+# Label creation
+content_variable = StringVar()
+ex_label = ttk.Label(content_frame, anchor=CENTER, textvariable=content_variable)
+content_variable.set("Enter path/to/file.csv")
+ex_label.pack()
 
-ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
 
-for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
+# Entry creation
+file_entry = StringVar()
+file_path_entry = ttk.Entry(content_frame, textvariable=file_entry, width=50)
+file_path_entry.pack()
 
-feet_entry.focus()
-root.bind('<Return>', calculate)
+
+# Button creation
+exit_button = ttk.Button(content_frame, text='Exit', command='')
+exit_button.state(['disabled'])
+exit_button.pack(side=RIGHT, padx=8, pady=8)
+open_button = ttk.Button(content_frame, text='Open', command='')
+open_button.pack(side=RIGHT)
+
 
 root.mainloop()
