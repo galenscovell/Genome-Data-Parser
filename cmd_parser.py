@@ -1,6 +1,6 @@
 
 
-# This is the parser component for the GUI interface, interface.py
+# This is the parser component for the GUI, interface.py.
 # Not to be used on its own!
 
 
@@ -12,6 +12,15 @@ import matplotlib.pyplot as plt
 
 
 class DataParser():
+
+    def check_file(self, data_file): 
+        if data_file.endswith('.csv'):
+            dataframe = pd.read_csv(data_file, header=0)
+        elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
+            dataframe = pd.read_excel(data_file, header=0)
+        print("Why, yes.")
+        return dataframe
+
     def file_output(self, final_df):
         save_name = ""
         while len(save_name) == 0:
@@ -21,7 +30,6 @@ class DataParser():
             os.makedirs(save_path)
         file_path = save_path + save_name + ".csv"
         final_df.to_csv(file_path)
-
 
     def create_graph(self, analyzed, total):
         labels = []
@@ -46,7 +54,6 @@ class DataParser():
         plt.tight_layout()
         plt.show()
         print("\nChart Output-------------------------")
-
 
     def pick_column(self, df):
         # Pick column from available headers
@@ -79,14 +86,12 @@ class DataParser():
                 elif graph[0].lower() == 'n':
                     break
 
-
     def term_prompt(self):
         # Ask for search term of interest
         print("\n\tEnter search term (case-sensitive):")
         term = input("\t > ")
         print("")
         return term
-
 
     def search_keyword(self, df, chosen_column, search_term, total_length):
         # Return all rows with term in specified column
@@ -148,19 +153,3 @@ class DataParser():
                     new_t = self.term_prompt()
                     self.search_keyword(new_df, new_column, new_t, total_length)
         print("\n-------------------------")
-    
-    
-
-
-def main():
-    parser = DataParser()
-    datafile = parser.file_prompt()
-
-    print("\n____________[ GENOMIC DATA PARSER ]____________\n")
-    if datafile.endswith('.csv'):
-        dataframe = pd.read_csv(datafile, header=0)
-    elif datafile.endswith('.xls') or datafile.endswith('.xlsx'):
-        dataframe = pd.read_excel(datafile, header=0)
-    else:
-        print("\tFile extension needs to be .csv, .xls, or .xlsx")
-        sys.exit()

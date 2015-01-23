@@ -1,7 +1,7 @@
 
 
-# This is the STANDALONE command-line parser
-# To be used separately from the GUI interface, interface.py!
+# This is the STANDALONE command-line parser.
+# To be used separately from the GUI, interface.py!
 
 
 import sys, os.path, xlrd, time

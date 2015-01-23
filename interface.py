@@ -7,17 +7,22 @@ import time
 
 
 class MainWindow():
-    def __init__(self, root):
+
+    def __init__(self, root, parser):
         self.root = root
+        self.parser = parser
         self.custom_font = font.Font(family='Source Code Pro', size=9)
 
-        # Widgets
+
+        # -------------------------------------------------- #
+        # -                    Widgets                     - #
+        # -------------------------------------------------- #
         self.main_frame = ttk.Frame(self.root, padding=20)
-
-
         self.console_frame = ttk.Frame(self.main_frame)
         self.console_frame['borderwidth'] = 20
         self.console_frame['relief'] = 'solid'
+        self.button_frame = ttk.Frame(self.main_frame)
+
 
         self.console_label = ttk.Label(self.console_frame, text="Console Output:")
         self.console_text = Text(self.console_frame, width=70, height=20, font=self.custom_font)
@@ -32,17 +37,19 @@ class MainWindow():
         self.console_text.insert(END, "\nWaiting for csv/xls/xlsx file...")
 
 
-        self.button_frame = ttk.Frame(self.main_frame)
-
         self.exit_button = ttk.Button(self.button_frame, width=18, text='Exit', command=self.close_window)
         self.open_button = ttk.Button(self.button_frame, width=18, text='Open', command=self.file_browser)
         self.save_button = ttk.Button(self.button_frame, width=18, text='Save', command=self.save_output)
 
 
-        # Layout
+
+        # -------------------------------------------------- #
+        # -                     Layout                     - #
+        # -------------------------------------------------- #
         self.main_frame.grid(column=0, row=0, sticky=(N, W, E, S))
         self.console_frame.grid(column=0, row=0, sticky=N)
         self.button_frame.grid(column=0, row=3, columnspan=3, sticky=S)
+
 
         self.console_label.grid(column=0, row=0, sticky=W)
         self.console_text.grid(column=0, row=1)
@@ -50,12 +57,16 @@ class MainWindow():
         self.console_input_label.grid(column=0, row=2, pady=(20, 0), sticky=W)
         self.console_input.grid(column=0, row=2, pady=(20, 0))
 
+
         self.exit_button.grid(column=2, row=0, sticky=E)
         self.open_button.grid(column=1, row=0, padx=(20, 20))
         self.save_button.grid(column=0, row=0, sticky=W)
 
 
-        # Grid Configuration
+
+        # -------------------------------------------------- #
+        # -               Grid Configuration               - #
+        # -------------------------------------------------- #
         self.root.columnconfigure(0, weight=3)
         self.root.rowconfigure(0, weight=3)
 
@@ -75,8 +86,12 @@ class MainWindow():
         self.button_frame.rowconfigure(0, weight=3)
 
 
-        # Key bindings
+
+        # -------------------------------------------------- #
+        # -                  Key Bindings                  - #
+        # -------------------------------------------------- #
         # root.bind("<Return>", lambda x: # User input to console)
+
 
 
     def update_input_label(self, textvar, state):
@@ -92,12 +107,12 @@ class MainWindow():
 
     def file_browser(self):
         data_file = askopenfilename(parent=self.root, filetypes=(("CSV files", "*.csv"),("Excel files", "*.xls;*.xlsx")))
-        if data_file.endswith('.csv'):
-            self.update_console('Csv data loaded.')
-        elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
-            self.update_console('Excel data loaded.')
+        allowed_types = ('.csv', '.xls', '.xlsx')
+        if data_file.endswith(allowed_types):
+            self.parser.check_file(data_file)
+            self.update_console(data_file)
         else:
-            self.update_console("File extension needs to be .csv, .xls, or .xlsx")
+            self.update_console("File extension must be .csv, .xls, or .xlsx")
 
     def save_output(self):
         print("Nothin' yet!")
@@ -130,8 +145,8 @@ def create_interface():
 
 def main():
     root = create_interface()
-    app = MainWindow(root)
     parser = DataParser()
+    app = MainWindow(root, parser)
 
     root.mainloop()
 
