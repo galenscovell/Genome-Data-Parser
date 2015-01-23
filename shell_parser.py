@@ -1,20 +1,8 @@
-'''
-TODO:
-[X] 1. Search rows by column
-    [X] a. Using sub-array terms
-    [X] b. Filter by further search terms (refinement)
-    [X] c. Output results as CSV
-        [X] i. Dated folder organization, user save name
 
-[X] 2. Scan composition of column
-    [X] a. Pie-chart creation
-    [X] b. Ratio of rows containing keyword within column
-        [X] i. Using subarray terms
-    [X] c. Output figures
 
-[ ] 3. Cmdline interface -> GUI
-[ ] 4. Create packaged executable for easy use across systems
-'''
+# This is the STANDALONE command-line parser
+# To be used separately from the GUI interface, interface.py!
+
 
 import sys, os.path, xlrd, time
 import pandas as pd
@@ -175,14 +163,13 @@ def search_keyword(df, chosen_column, search_term, total_length):
 
 
 def main():
-
-    f = file_prompt()
+    datafile = file_prompt()
 
     print("\n____________[ GENOMIC DATA PARSER ]____________\n")
-    if f.endswith('.csv'):
-        dataframe = pd.read_csv(f, header=0)
-    elif f.endswith('.xls') or f.endswith('.xlsx'):
-        dataframe = pd.read_excel(f, header=0)
+    if datafile.endswith('.csv'):
+        dataframe = pd.read_csv(datafile, header=0)
+    elif datafile.endswith('.xls') or datafile.endswith('.xlsx'):
+        dataframe = pd.read_excel(datafile, header=0)
     else:
         print("\tFile extension needs to be .csv, .xls, or .xlsx")
         sys.exit()
@@ -190,7 +177,7 @@ def main():
     running = True
     while running:
         choice = " "
-        print("\nFILE IN USE: " + f + " (" + str(len(dataframe)) + " rows)")
+        print("\nFILE IN USE: " + datafile + " (" + str(len(dataframe)) + " rows)")
         print("(Options: Scan [C]olumns, Search [K]eyword, [E]xit)")
         while len(choice) == 0 or choice[0].lower() not in ('c', 'k', 'e'):
             choice = input(" > ")
@@ -200,8 +187,8 @@ def main():
                     scan_column(dataframe, column)
                 elif choice[0].lower() == 'k':
                     column = pick_column(dataframe)
-                    t = term_prompt()
-                    search_keyword(dataframe, column, t, len(dataframe))
+                    term = term_prompt()
+                    search_keyword(dataframe, column, term, len(dataframe))
                 elif choice[0].lower() == 'e':
                     running = False
                     break
