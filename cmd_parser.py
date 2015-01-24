@@ -18,7 +18,6 @@ class DataParser():
             dataframe = pd.read_csv(data_file, header=0)
         elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
             dataframe = pd.read_excel(data_file, header=0)
-        print("Why, yes.")
         return dataframe
 
     def file_output(self, final_df):
@@ -65,7 +64,6 @@ class DataParser():
         while column_choice not in header_info:
             column_choice = input("\t > ")
         return column_choice
-
 
     def scan_column(self, df, chosen_column):
         # Scan for all unique elements in column

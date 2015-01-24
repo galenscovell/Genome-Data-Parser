@@ -3,7 +3,7 @@ from cmd_parser import DataParser
 from tkinter import *
 from tkinter import ttk, font, messagebox
 from tkinter.filedialog import askopenfilename
-import time
+import time, os.path
 
 
 class MainWindow():
@@ -35,6 +35,7 @@ class MainWindow():
         self.console_text.insert(END, "[ Parser Ready ]" + (" " * 44) + time.strftime("%d/%m/%Y"))
         self.console_text.insert(END, "\n" + "-" * 70)
         self.console_text.insert(END, "\nWaiting for csv/xls/xlsx file...")
+        self.console_text.config(state=DISABLED)
 
 
         self.exit_button = ttk.Button(self.button_frame, width=18, text='Exit', command=self.close_window)
@@ -110,7 +111,8 @@ class MainWindow():
         allowed_types = ('.csv', '.xls', '.xlsx')
         if data_file.endswith(allowed_types):
             self.parser.check_file(data_file)
-            self.update_console(data_file)
+            load_message = "File loaded: " + os.path.basename(data_file)
+            self.update_console(load_message)
         else:
             self.update_console("File extension must be .csv, .xls, or .xlsx")
 
@@ -118,15 +120,17 @@ class MainWindow():
         print("Nothin' yet!")
 
     def update_console(self, output):
+        self.console_text.config(state=NORMAL)
         self.console_text.insert(END, "\n" + output)
         self.console_input.delete(0, END)
+        self.console_text.config(state=DISABLED)
 
 
 
 def create_interface():
     root = Tk()
     
-    img = PhotoImage(file='icon.gif')
+    img = PhotoImage(file='assets/icon.gif')
     root.call('wm', 'iconphoto', root._w, '-default', img)
     root.title('Genome Data Parser')
 
@@ -147,7 +151,6 @@ def main():
     root = create_interface()
     parser = DataParser()
     app = MainWindow(root, parser)
-
     root.mainloop()
 
 
