@@ -91,7 +91,9 @@ class MainWindow():
         # -------------------------------------------------- #
         # -                  Key Bindings                  - #
         # -------------------------------------------------- #
-        # root.bind("<Return>", lambda x: # User input to console)
+        # root.bind('<Return>', lambda x: # User input to console)
+        root.bind('<Escape>', self.close_window)
+        root.protocol('WM_DELETE_WINDOW', self.close_window)
 
 
 
@@ -102,7 +104,7 @@ class MainWindow():
     def update_option_label(self, textvar):
         self.option_text.set(textvar)
 
-    def close_window(self):
+    def close_window(self, event=0):
         if messagebox.askyesno(message='Are you sure you want to quit? Any unsaved results will be lost.', title='Close Parser', icon='info'):
             self.root.destroy()
 
@@ -113,6 +115,8 @@ class MainWindow():
             self.parser.check_file(data_file)
             load_message = "File loaded: " + os.path.basename(data_file)
             self.update_console(load_message)
+        elif not data_file:
+            pass
         else:
             self.update_console("File extension must be .csv, .xls, or .xlsx")
 

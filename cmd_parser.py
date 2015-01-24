@@ -20,7 +20,7 @@ class DataParser():
             dataframe = pd.read_excel(data_file, header=0)
         return dataframe
 
-    def file_output(self, final_df):
+    def file_output(self, current_df):
         save_name = ""
         while len(save_name) == 0:
             save_name = input("\n\tSave file as: ")
@@ -28,7 +28,7 @@ class DataParser():
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         file_path = save_path + save_name + ".csv"
-        final_df.to_csv(file_path)
+        current_df.to_csv(file_path)
 
     def create_graph(self, analyzed, total):
         labels = []
