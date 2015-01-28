@@ -94,6 +94,7 @@ class MainWindow():
         # -                  Key Bindings                  - #
         # -------------------------------------------------- #
         self.root.protocol('WM_DELETE_WINDOW', self.close_window)
+        self.options_box.bind('<Double-Button-1>', self.select_list_item)
 
 
 
@@ -110,35 +111,35 @@ class MainWindow():
         self.console_text.insert(END, '\n' + output, tag)
         self.console_text.config(state=DISABLED)
 
+    def select_list_item(self, event):
+        widget = event.widget
+        selection = widget.curselection()
+        value = widget.get(selection[0])
+        self.update_console(value)
+        if value == 'Scan Column Composition':
+            column = self.parser.pick_column(self.dataframe)
+            self.parser.scan_column(self.dataframe, column)
+        elif value == 'Keyword Search':
+            column = self.parser.pick_column(self.dataframe)
+            term = self.parser.term_prompt()
+            self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe))
+
     def file_browser(self):
         datafile = askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
         allowed_types = ('.csv', '.xls', '.xlsx')
         if datafile.endswith(allowed_types):
-            dataframe = self.parser.check_file(datafile)
-            load_message = '\nFile loaded: ' + os.path.basename(datafile) + ' (' + str(len(dataframe)) + ' rows in file)'
+            self.dataframe = self.parser.check_file(datafile)
+            load_message = '\nFile loaded: ' + os.path.basename(datafile) + ' (' + str(len(self.dataframe)) + ' rows in file)'
             self.update_console(load_message)
-            self.program_main(dataframe)
+            self.program_begin()
         elif not datafile:
             pass
         else:
             self.update_console('File extension must be .csv, .xls, or .xlsx')
 
-    def program_main(self, df):
-        running = True
-        while running:
-            choice = ' '
-            self.update_console('Options: Keyword Search, Scan Column Composition', 'green')
-            self.options_list.set(('Keyword Search', 'Scan Column Composition'))
-            while len(choice) == 0 or choice[0].lower() not in ('c', 'k'):
-                choice = input(' > ')
-                if len(choice) > 0:
-                    if choice[0].lower() == 'c':
-                        column = self.parser.pick_column(df)
-                        self.parser.scan_column(df, column)
-                    elif choice[0].lower() == 'k':
-                        column = self.parser.pick_column(df)
-                        term = self.parser.term_prompt()
-                        self.parser.search_keyword(df, column, term, len(df))
+    def program_begin(self):
+        self.update_console('Options: Keyword Search, Scan Column Composition', 'green')
+        self.options_list.set(('Keyword Search', 'Scan Column Composition'))
 
 
 
