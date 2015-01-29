@@ -36,9 +36,10 @@ class MainWindow():
         self.options_box.config(yscrollcommand=self.options_scrollbar.set)
 
         self.console_text.insert(END, '\n' + ('-' * 70))
-        self.console_text.insert(END, '\nWaiting for csv/xls/xlsx file...')
+        self.console_text.insert(END, '\n[Waiting for csv/xls/xlsx file...]')
         self.console_text.config(state=DISABLED)
         self.console_text.tag_configure('green', foreground='green')
+        self.console_text.tag_configure('blue', foreground='blue')
 
 
         self.exit_btn = ttk.Button(self.btn_frame, width=18, text='Exit', command=self.close_window)
@@ -95,8 +96,7 @@ class MainWindow():
         # -------------------------------------------------- #
         self.root.protocol('WM_DELETE_WINDOW', self.close_window)
         self.options_box.bind('<Double-Button-1>', self.select_list_item)
-
-
+        
 
     def close_window(self):
         if messagebox.askyesno(message='Are you sure you want to quit? Any unsaved results will be lost.', title='Close Parser', icon='info'):
@@ -115,14 +115,14 @@ class MainWindow():
         widget = event.widget
         selection = widget.curselection()
         value = widget.get(selection[0])
-        self.update_console(value)
+        self.update_console(' > ' + value)
         if value == 'Scan Column Composition':
             column = self.parser.pick_column(self.dataframe)
             self.parser.scan_column(self.dataframe, column)
         elif value == 'Keyword Search':
-            column = self.parser.pick_column(self.dataframe)
-            term = self.parser.term_prompt()
-            self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe))
+            column = self.parser.pick_column(self.dataframe, self)
+            term = self.parser.term_prompt(self)
+            self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe), self)
 
     def file_browser(self):
         datafile = askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
@@ -138,7 +138,7 @@ class MainWindow():
             self.update_console('File extension must be .csv, .xls, or .xlsx')
 
     def program_begin(self):
-        self.update_console('Options: Keyword Search, Scan Column Composition', 'green')
+        self.update_console('[Select Keyword Search or Scan Column Composition]', 'green')
         self.options_list.set(('Keyword Search', 'Scan Column Composition'))
 
 
