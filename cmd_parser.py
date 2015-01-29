@@ -1,25 +1,4 @@
 
-
-# This is the parser component for the GUI, interface.py.
-# Not to be used on its own!
-
-
-import sys, os.path, xlrd, time
-import pandas as pd
-from pandas import DataFrame
-import matplotlib.pyplot as plt
-
-
-
-class DataParser():
-
-    def check_file(self, data_file): 
-        if data_file.endswith('.csv'):
-            dataframe = pd.read_csv(data_file, header=0)
-        elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
-            dataframe = pd.read_excel(data_file, header=0)
-        return dataframe
-
     def file_output(self, current_df):
         save_name = ''
         while len(save_name) == 0:
@@ -29,67 +8,6 @@ class DataParser():
             os.makedirs(save_path)
         file_path = save_path + save_name + '.csv'
         current_df.to_csv(file_path)
-
-    def create_graph(self, analyzed, total):
-        labels = []
-        sizes = []
-        colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
-        
-        if type(analyzed) is list:
-            for element in analyzed:
-                percentage = (total.count(element) / len(total)) * 100
-                title = element + ': ' + str(round(percentage, 2)) + '%'
-                labels.append(title)
-                sizes.append(percentage)
-        else:
-            percentage = (analyzed / total) * 100
-            labels = ['Searched: ' + str(round(percentage, 2)) + '%', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
-            sizes = [percentage, 100 - percentage]
-
-        plt.rcParams['font.size'] = 9.0
-        patches, texts = plt.pie(sizes, colors=colors, startangle=0)
-        plt.legend(patches, labels, loc='best')
-        plt.axis('equal')
-        plt.tight_layout()
-        plt.show()
-        print('\nChart Output-------------------------')
-
-    def pick_column(self, df, interface):
-        # Pick column from available headers
-        column_choice = ' '
-        header_info = list(df)
-        interface.update_console('\nFollowing column headers found:', 'green')
-        header_message = ', '.join(header_info)
-        interface.update_console(header_message, 'blue')
-        interface.update_console('[Select Column of interest]', 'green')
-        while column_choice not in header_info:
-            column_choice = input('\t > ')
-        return column_choice
-
-    def scan_column(self, df, chosen_column):
-        # Scan for all unique elements in column
-        column_total = []
-        column_unique = []
-        for row in df[chosen_column]:
-            if row not in column_total:
-                column_unique.append(row)
-            column_total.append(row)
-
-        graph = ' '
-        print('\n\tCreate pie-chart with collected data (Y/N)?')
-        while len(graph) == 0 or graph[0].lower() not in ('y', 'n'):
-            graph = input('\t > ')
-            if len(graph) > 0:
-                if graph[0].lower() == 'y':
-                    self.create_graph(column_unique, column_total)
-                elif graph[0].lower() == 'n':
-                    break
-
-    def term_prompt(self, interface):
-        # Ask for search term of interest
-        interface.update_console('\n\tEnter search term (case-sensitive):', 'green')
-        term = input('\t > ')
-        return term
 
     def search_keyword(self, df, chosen_column, search_term, total_length):
         # Return all rows with term in specified column

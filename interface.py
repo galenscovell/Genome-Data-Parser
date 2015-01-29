@@ -1,16 +1,21 @@
 
-from cmd_parser import DataParser
+import sys, os.path, time, xlrd
+
+import pandas as pd
+from pandas import DataFrame
+
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+
 from tkinter import *
 from tkinter import ttk, font, messagebox
-from tkinter.filedialog import askopenfilename
-import sys, os.path, time
 
 
 class MainWindow():
 
-    def __init__(self, root, parser):
+    def __init__(self, root):
         self.root = root
-        self.parser = parser
         self.custom_font = font.Font(family='Source Code Pro', size=9)
 
 
@@ -19,8 +24,8 @@ class MainWindow():
         # -------------------------------------------------- #
         self.main_frame = ttk.Frame(self.root, padding=10)
         self.console_frame = ttk.Frame(self.main_frame)
-        self.console_frame['borderwidth'] = 20
-        self.console_frame['relief'] = 'solid'
+        self.console_frame['borderwidth'] = 10
+        self.console_frame['relief'] = 'groove'
         self.btn_frame = ttk.Frame(self.main_frame)
 
 
@@ -30,8 +35,11 @@ class MainWindow():
         self.console_text.config(yscrollcommand=self.console_scrollbar.set)
         self.console_text.insert(END, 'Transcriptome Data Parser' + (' ' * 35) + time.strftime('%d/%m/%Y'))
 
+        self.current_file = StringVar()
+        self.current_label = ttk.Label(self.console_frame, textvariable=self.current_file)
+        self.current_file.set('No file loaded.')
         self.options_list = StringVar()
-        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list)
+        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.custom_font)
         self.options_scrollbar = ttk.Scrollbar(self.console_frame, command=self.options_box.yview)
         self.options_box.config(yscrollcommand=self.options_scrollbar.set)
 
@@ -59,8 +67,9 @@ class MainWindow():
         self.console_label.grid(column=0, row=0, sticky=W)
         self.console_text.grid(column=0, row=1)
         self.console_scrollbar.grid(column=1, row=1, sticky=NS)
-        self.options_box.grid(column=0, row=2, columnspan=2, pady=(10, 0))
-        self.options_scrollbar.grid(column=1, row=2, sticky=NS)
+        self.current_label.grid(column=0, row=0, sticky=E, ipady=20)
+        self.options_box.grid(column=0, row=3, columnspan=2, pady=(10, 0))
+        self.options_scrollbar.grid(column=1, row=3, sticky=NS)
 
         self.exit_btn.grid(column=2, row=0, sticky=E)
         self.open_btn.grid(column=1, row=0, padx=(20, 20))
@@ -83,6 +92,7 @@ class MainWindow():
         self.console_frame.rowconfigure(0, weight=3)
         self.console_frame.rowconfigure(1, weight=3)
         self.console_frame.rowconfigure(2, weight=3)
+        self.console_frame.rowconfigure(3, weight=3)
 
         self.btn_frame.columnconfigure(0, weight=3)
         self.btn_frame.columnconfigure(1, weight=3)
@@ -96,6 +106,7 @@ class MainWindow():
         # -------------------------------------------------- #
         self.root.protocol('WM_DELETE_WINDOW', self.close_window)
         self.options_box.bind('<Double-Button-1>', self.select_list_item)
+        self.options_box.bind('<Return>', self.select_list_item)
         
 
     def close_window(self):
@@ -109,6 +120,7 @@ class MainWindow():
     def update_console(self, output, tag=None):
         self.console_text.config(state=NORMAL)
         self.console_text.insert(END, '\n' + output, tag)
+        self.console_text.see(END)
         self.console_text.config(state=DISABLED)
 
     def select_list_item(self, event):
@@ -116,23 +128,28 @@ class MainWindow():
         selection = widget.curselection()
         value = widget.get(selection[0])
         self.update_console(' > ' + value)
-        if value == 'Scan Column Composition':
-            column = self.parser.pick_column(self.dataframe)
-            self.parser.scan_column(self.dataframe, column)
-        elif value == 'Keyword Search':
-            column = self.parser.pick_column(self.dataframe, self)
-            term = self.parser.term_prompt(self)
-            self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe), self)
+        if self.state == 'beginning':
+            if value == 'Scan Column Composition':
+                self.pick_column(self.dataframe)
+            elif value == 'Keyword Search':
+                self.pick_column(self.dataframe)
+                # self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe), self)
+        elif self.state == 'choosing_column':
+            self.column_choice = value
+            self.options_list.set('')
+            self.scan_column(self.dataframe)
+            self.program_begin()
 
     def file_browser(self):
-        datafile = askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
+        self.data_file = filedialog.askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
         allowed_types = ('.csv', '.xls', '.xlsx')
-        if datafile.endswith(allowed_types):
-            self.dataframe = self.parser.check_file(datafile)
-            load_message = '\nFile loaded: ' + os.path.basename(datafile) + ' (' + str(len(self.dataframe)) + ' rows in file)'
+        if self.data_file.endswith(allowed_types):
+            self.dataframe = self.check_file(self.data_file)
+            load_message = '\nFile loaded: ' + os.path.basename(self.data_file) + ' (' + str(len(self.dataframe)) + ' rows in file)'
             self.update_console(load_message)
+            self.current_file.set('File in use: ' + os.path.basename(self.data_file))
             self.program_begin()
-        elif not datafile:
+        elif not self.data_file:
             pass
         else:
             self.update_console('File extension must be .csv, .xls, or .xlsx')
@@ -140,6 +157,67 @@ class MainWindow():
     def program_begin(self):
         self.update_console('[Select Keyword Search or Scan Column Composition]', 'green')
         self.options_list.set(('Keyword Search', 'Scan Column Composition'))
+        self.state = 'beginning'
+
+
+
+    # -------------------------------------------------- #
+    # -                Parser Functions                - #
+    # -------------------------------------------------- #
+    def check_file(self, data_file):
+        # Ensure datafile meets expectations
+        if data_file.endswith('.csv'):
+            dataframe = pd.read_csv(data_file, header=0)
+        elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
+            dataframe = pd.read_excel(data_file, header=0)
+        return dataframe
+
+    def pick_column(self, df):
+        # Pick column from available headers
+        header_info = list(df)
+        self.update_console('\nFollowing column headers found:')
+        header_message = ', '.join(list(df))
+        self.update_console(header_message, 'blue')
+        self.update_console('[Select Column of interest]', 'green')
+        self.options_list.set(tuple(header_info))
+        self.state = 'choosing_column'
+
+    def term_prompt(self):
+        # Ask for search term of interest
+        self.update_console('\n\tEnter search term (case-sensitive):', 'green')
+
+    def scan_column(self, df):
+        # Scan for all unique elements in column
+        column_total = []
+        column_unique = []
+        for row in df[self.column_choice]:
+            if row not in column_total:
+                column_unique.append(row)
+            column_total.append(row)
+        self.create_graph(column_unique, column_total)
+
+    def create_graph(self, analyzed, total):
+        # Pie chart creation and output
+        labels = []
+        sizes = []
+        colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
+        if type(analyzed) is list:
+            for element in analyzed:
+                percentage = (total.count(element) / len(total)) * 100
+                title = element + ': ' + str(round(percentage, 2)) + '%'
+                labels.append(title)
+                sizes.append(percentage)
+        else:
+            percentage = (analyzed / total) * 100
+            labels = ['Searched: ' + str(round(percentage, 2)) + '%', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
+            sizes = [percentage, 100 - percentage]
+        patches, texts = plt.pie(sizes, colors=colors, startangle=0)
+        plt.legend(patches, labels, loc='best')
+        plt.axis('equal')
+        plt.tight_layout()
+        plt.ion()
+        plt.show()
+        self.update_console('\nChart Output ------------------------------\n', 'blue')
 
 
 
@@ -160,13 +238,9 @@ def create_interface():
     return root
 
 
-
-
-
 def main():
     root = create_interface()
-    parser = DataParser()
-    app = MainWindow(root, parser)
+    app = MainWindow(root)
     root.mainloop()
 
 
