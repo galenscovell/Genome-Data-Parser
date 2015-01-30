@@ -294,17 +294,17 @@ class MainWindow():
                 if search_term in row:
                     search_results += 1
                     row_list.append(row_index)
-
+        # Push results to console
         if search_results > 0:
             self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+            # Update dataframe with search term filter
+            searched_data = []
+            for index in row_list:
+                searched_data.append(df.irow(index))
+            self.dataframe = pd.DataFrame(data=searched_data)
+            self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows in file, original was ' + str(self.original_dataframe_length) + ' rows)\n')
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
-
-        searched_data = []
-        for index in row_list:
-            searched_data.append(df.irow(index))
-        self.dataframe = pd.DataFrame(data=searched_data)
-        self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows in file, original was ' + str(self.original_dataframe_length) + ' rows)\n')
         self.column_choice = ''
         self.search_term = ''
         self.program_begin()
