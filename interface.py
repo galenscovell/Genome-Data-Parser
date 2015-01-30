@@ -14,6 +14,7 @@ class MainWindow():
     def __init__(self, root):
         self.root = root
         self.regular_font = font.Font(family='DejaVu Sans Mono', size=10)
+        self.dataframe = ''
 
 
         # -------------------------------------------------- #
@@ -58,7 +59,6 @@ class MainWindow():
         self.main_frame.grid(column=0, row=0, sticky=(N, W, E, S))
         self.console_frame.grid(column=0, row=0, sticky=N)
         self.btn_frame.grid(column=0, row=3, columnspan=3, pady=10, sticky=S)
-
 
         self.console_label.grid(column=0, row=0, sticky=W)
         self.current_label.grid(column=0, row=0, sticky=E, ipady=10)
@@ -118,7 +118,13 @@ class MainWindow():
 
 
     def save_output(self):
-        print('Nothin\' yet!')
+        save_path = 'results/' + time.strftime('%d_%m_%Y') + '/'
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        file_path = save_path + '.csv'
+        self.dataframe.to_csv(file_path)
+        self.update_console('\nData saved to ' + file_path)
+        self.dataframe = ''
 
 
     def update_console(self, output, tag=None):
@@ -142,7 +148,6 @@ class MainWindow():
             elif value == 'Keyword Search':
                 self.state = 'column_for_keyword'
                 self.pick_column(self.dataframe)
-                # self.parser.search_keyword(self.dataframe, column, term, len(self.dataframe), self)
         else:
             self.column_choice = value
             self.options_list.set('')
@@ -163,19 +168,25 @@ class MainWindow():
 
     def file_browser(self):
         # Open file browser, allow selection of csv/xls/xlsx only
-        self.data_file = filedialog.askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
-        allowed_types = ('.csv', '.xls', '.xlsx')
-        if self.data_file.endswith(allowed_types):
-            self.dataframe = self.create_dataframe(self.data_file)
-            load_message = '\nFile loaded: ' + os.path.basename(self.data_file) + ' (' + str(len(self.dataframe)) + ' rows in file)'
-            self.update_console(load_message)
-            self.current_file.set('File in use: ' + os.path.basename(self.data_file))
-            self.program_begin()
-        elif not self.data_file:
-            pass
+        if len(self.dataframe) == 0:
+            self.data_file = filedialog.askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
+            allowed_types = ('.csv', '.xls', '.xlsx')
+            if self.data_file.endswith(allowed_types):
+                self.dataframe = self.create_dataframe(self.data_file)
+                load_message = '\nFile loaded: ' + os.path.basename(self.data_file) + ' (' + str(len(self.dataframe)) + ' rows in file)'
+                self.update_console(load_message)
+                self.current_file.set('File in use: ' + os.path.basename(self.data_file))
+                self.program_begin()
+            elif not self.data_file:
+                pass
+            else:
+                # If user somehow breaks it (as is their wont)
+                self.update_console('File extension must be .csv, .xls, or .xlsx')
         else:
-            # If user somehow breaks it (as is their wont)
-            self.update_console('File extension must be .csv, .xls, or .xlsx')
+            # If dataframe currently loaded, confirmation to close and open new
+            if messagebox.askyesno(message='Open new data? This will cause previous unsaved data to be lost.', title='Open New', icon='info'):
+                self.dataframe = ''
+                self.file_browser()
 
 
     def program_begin(self):
@@ -190,7 +201,7 @@ class MainWindow():
     # -                Parser Functions                - #
     # -------------------------------------------------- #
     def create_dataframe(self, data_file):
-        # Create dataframe with different methods depending on extension type
+        # Create dataframe via different methods depending on extension type
         if data_file.endswith('.csv'):
             dataframe = pd.read_csv(data_file, header=0)
         elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
