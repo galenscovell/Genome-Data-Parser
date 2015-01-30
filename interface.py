@@ -303,6 +303,7 @@ class MainWindow():
                 searched_data.append(df.irow(index))
             self.dataframe = pd.DataFrame(data=searched_data)
             self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows in file, original was ' + str(self.original_dataframe_length) + ' rows)\n')
+            self.create_graph(search_results, self.original_dataframe_length)
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
         self.column_choice = ''
