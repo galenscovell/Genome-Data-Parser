@@ -13,7 +13,7 @@ class MainWindow():
 
     def __init__(self, root):
         self.root = root
-        self.custom_font = font.Font(family='Source Code Pro', size=9)
+        self.regular_font = font.Font(family='DejaVu Sans Mono', size=10)
 
 
         # -------------------------------------------------- #
@@ -21,7 +21,7 @@ class MainWindow():
         # -------------------------------------------------- #
         self.main_frame = ttk.Frame(self.root, padding=10)
         self.console_frame = ttk.Frame(self.main_frame)
-        self.console_frame['borderwidth'] = 10
+        self.console_frame['borderwidth'] = 12
         self.console_frame['relief'] = 'groove'
         self.btn_frame = ttk.Frame(self.main_frame)
 
@@ -29,7 +29,7 @@ class MainWindow():
         self.current_file = StringVar()
         self.current_label = ttk.Label(self.console_frame, textvariable=self.current_file)
         self.current_file.set('No file loaded.')
-        self.console_text = Text(self.console_frame, width=70, height=20, font=self.custom_font, wrap=WORD)
+        self.console_text = Text(self.console_frame, width=70, height=20, font=self.regular_font, wrap=WORD, fg='#2c3e50')
         self.console_scrollbar = ttk.Scrollbar(self.console_frame, command=self.console_text.yview)
         self.console_text.config(yscrollcommand=self.console_scrollbar.set)
         self.console_text.insert(END, 'Transcriptome Data Parser' + (' ' * 35) + time.strftime('%d/%m/%Y'))
@@ -37,15 +37,15 @@ class MainWindow():
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
         self.options_list = StringVar()
-        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.custom_font)
+        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.regular_font)
         self.options_scrollbar = ttk.Scrollbar(self.console_frame, command=self.options_box.yview)
         self.options_box.config(yscrollcommand=self.options_scrollbar.set)
 
         self.console_text.insert(END, '\n' + ('-' * 70))
-        self.console_text.insert(END, '\n[Waiting for csv/xls/xlsx file...]')
+        self.console_text.insert(END, '\nReady, Waiting for csv/xls/xlsx file...')
         self.console_text.config(state=DISABLED)
-        self.console_text.tag_configure('green', foreground='green')
-        self.console_text.tag_configure('blue', foreground='blue')
+        self.console_text.tag_configure('green', foreground='#27ae60')
+        self.console_text.tag_configure('blue', foreground='#2980b9')
 
         self.exit_btn = ttk.Button(self.btn_frame, width=18, text='Exit', command=self.close_window)
         self.open_btn = ttk.Button(self.btn_frame, width=18, text='Open', command=self.file_browser)
@@ -111,24 +111,30 @@ class MainWindow():
     # -                GUI Functions                   - #
     # -------------------------------------------------- #
     def close_window(self):
+        # Popup message on exit attempts
         if messagebox.askyesno(message='Are you sure you want to quit? Any unsaved results will be lost.', title='Close Parser', icon='info'):
             self.root.destroy()
             sys.exit()
 
+
     def save_output(self):
         print('Nothin\' yet!')
 
+
     def update_console(self, output, tag=None):
+        # Handle text display for console widget
         self.console_text.config(state=NORMAL)
         self.console_text.insert(END, '\n' + output, tag)
         self.console_text.see(END)
         self.console_text.config(state=DISABLED)
 
+
     def select_list_item(self, event):
+        # Handle user selection within listbox widget depending on program state
         widget = event.widget
         selection = widget.curselection()
         value = widget.get(selection[0])
-        self.update_console(' > ' + value)
+        self.update_console(' > ' + value, 'green')
         if self.state == 'beginning':
             if value == 'Scan Column Composition':
                 self.state = 'column_for_scan'
@@ -146,17 +152,21 @@ class MainWindow():
             elif self.state == 'column_for_keyword':
                 self.term_prompt()
 
+
     def get_search_input(self, event):
+        # Collect user search term while entry is enabled
         self.search_term = self.search_input.get()
         self.search_input.delete(0, END)
         self.search_input.config(state=DISABLED)
-        self.update_console(' > ' + self.search_term)
+        self.update_console(' > ' + self.search_term, 'green')
             
+
     def file_browser(self):
+        # Open file browser, allow selection of csv/xls/xlsx only
         self.data_file = filedialog.askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
         allowed_types = ('.csv', '.xls', '.xlsx')
         if self.data_file.endswith(allowed_types):
-            self.dataframe = self.check_file(self.data_file)
+            self.dataframe = self.create_dataframe(self.data_file)
             load_message = '\nFile loaded: ' + os.path.basename(self.data_file) + ' (' + str(len(self.dataframe)) + ' rows in file)'
             self.update_console(load_message)
             self.current_file.set('File in use: ' + os.path.basename(self.data_file))
@@ -164,10 +174,13 @@ class MainWindow():
         elif not self.data_file:
             pass
         else:
+            # If user somehow breaks it (as is their wont)
             self.update_console('File extension must be .csv, .xls, or .xlsx')
 
+
     def program_begin(self):
-        self.update_console('[Select Keyword Search or Scan Column Composition]', 'green')
+        # Greet user with initial options and set program state
+        self.update_console('Select [Keyword Search] or [Scan Column Composition]', 'blue')
         self.options_list.set(('Keyword Search', 'Scan Column Composition'))
         self.state = 'beginning'
 
@@ -176,31 +189,34 @@ class MainWindow():
     # -------------------------------------------------- #
     # -                Parser Functions                - #
     # -------------------------------------------------- #
-    def check_file(self, data_file):
-        # Ensure datafile meets expectations
+    def create_dataframe(self, data_file):
+        # Create dataframe with different methods depending on extension type
         if data_file.endswith('.csv'):
             dataframe = pd.read_csv(data_file, header=0)
         elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
             dataframe = pd.read_excel(data_file, header=0)
         return dataframe
 
+
     def pick_column(self, df):
-        # Pick column from available headers
+        # Create list of column headers within df and push them to listbox
         header_info = list(df)
-        self.update_console('\nFollowing column headers found:')
         header_message = ', '.join(list(df))
-        self.update_console(header_message, 'blue')
-        self.update_console('[Select Column of interest]', 'green')
+        self.update_console('\nSelect Column of Interest', 'blue')
+        self.update_console(header_message)
         self.options_list.set(tuple(header_info))
 
+
     def term_prompt(self):
-        # Ask for search term of interest
-        self.update_console('\n[Enter search term below (case-sensitive)]', 'green')
+        # Enable entry widget and set program to wait for user search term
+        self.update_console('\nEnter Search Term Below (Case-Sensitive)', 'blue')
         self.search_input.config(state=NORMAL)
         self.search_input.focus()
+        self.state = ''
+
 
     def scan_column(self, df):
-        # Scan for all unique elements in column
+        # Scan for all unique elements in column and push them to chart creation
         column_total = []
         column_unique = []
         for row in df[self.column_choice]:
@@ -208,6 +224,7 @@ class MainWindow():
                 column_unique.append(row)
             column_total.append(row)
         self.create_graph(column_unique, column_total)
+
 
     def create_graph(self, analyzed, total):
         # Pie chart creation and output
@@ -230,7 +247,7 @@ class MainWindow():
         plt.tight_layout()
         plt.ion()
         plt.show()
-        self.update_console('\nChart Output ------------------------------\n', 'blue')
+        self.update_console('\nChart Output ------------------------------\n', 'green')
 
 
 
@@ -238,6 +255,7 @@ class MainWindow():
 
 
 def create_interface():
+    # Init GUI root; set icon, dimensions and properties
     root = Tk()
     
     img = PhotoImage(file='assets/icon.gif')
@@ -246,7 +264,7 @@ def create_interface():
 
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()
-    window_x, window_y = 600, 540
+    window_x, window_y = 640, 580
     x_pos = (screen_x / 2) - (window_x / 2)
     y_pos = (screen_y / 2) - (window_y / 2)
     root.geometry('%dx%d+%d+%d' % (window_x, window_y, x_pos, y_pos))
