@@ -34,7 +34,7 @@ class MainWindow():
         self.console_text = Text(self.console_frame, width=70, height=20, font=self.regular_font, wrap=WORD, fg='#2c3e50', relief='groove')
         self.console_scrollbar = ttk.Scrollbar(self.console_frame, command=self.console_text.yview)
         self.console_text.config(yscrollcommand=self.console_scrollbar.set)
-        self.console_text.insert(END, 'Transcriptome Data Parser' + (' ' * 35) + time.strftime('%d/%m/%Y'))
+        self.console_text.insert(END, 'Data Parser' + (' ' * 49) + time.strftime('%d/%m/%Y'))
 
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
@@ -319,7 +319,7 @@ def create_interface():
     
     img = PhotoImage(file='assets/icon.gif')
     root.call('wm', 'iconphoto', root._w, '-default', img)
-    root.title('Genome Data Parser')
+    root.title('Data Parser')
 
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()

@@ -1,6 +1,6 @@
-# Genome-Data-Parser
+# Transcriptome Data Parser
 
-This repository is dedicated to the design and construction of a genomic data parser for the Tublitz Neuroscience lab at the University of Oregon. All of the actual genomic data is kept private.
+This repository is dedicated to the design and construction of a data parser for the Tublitz Neuroscience lab at the University of Oregon. All of the actual data is kept private.
 
 Utilizes:
 * <b>Pandas</b> and <b>Xlrd</b> module for handling csv, xls, and xlsx data
