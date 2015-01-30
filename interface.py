@@ -31,7 +31,7 @@ class MainWindow():
         self.current_file = StringVar()
         self.current_label = ttk.Label(self.console_frame, textvariable=self.current_file)
         self.current_file.set('No file loaded.')
-        self.console_text = Text(self.console_frame, width=70, height=20, font=self.regular_font, wrap=WORD, fg='#2c3e50')
+        self.console_text = Text(self.console_frame, width=70, height=20, font=self.regular_font, wrap=WORD, fg='#2c3e50', relief='groove')
         self.console_scrollbar = ttk.Scrollbar(self.console_frame, command=self.console_text.yview)
         self.console_text.config(yscrollcommand=self.console_scrollbar.set)
         self.console_text.insert(END, 'Transcriptome Data Parser' + (' ' * 35) + time.strftime('%d/%m/%Y'))
@@ -39,7 +39,7 @@ class MainWindow():
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
         self.options_list = StringVar()
-        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.regular_font)
+        self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.regular_font, relief='flat', highlightbackground='#95a5a6')
         self.options_scrollbar = ttk.Scrollbar(self.console_frame, command=self.options_box.yview)
         self.options_box.config(yscrollcommand=self.options_scrollbar.set)
 
@@ -294,10 +294,9 @@ class MainWindow():
                 if search_term in row:
                     search_results += 1
                     row_list.append(row_index)
-        # Push results to console
+        # If results, push to console and update dataframe
         if search_results > 0:
             self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
-            # Update dataframe with search term filter
             searched_data = []
             for index in row_list:
                 searched_data.append(df.irow(index))
@@ -306,6 +305,7 @@ class MainWindow():
             self.create_graph(search_results, self.original_dataframe_length)
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+        # Reset choices and go to beginning of program
         self.column_choice = ''
         self.search_term = ''
         self.program_begin()
