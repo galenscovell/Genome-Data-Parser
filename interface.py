@@ -15,6 +15,7 @@ class MainWindow():
         self.root = root
         self.regular_font = font.Font(family='DejaVu Sans Mono', size=10)
         self.dataframe = ''
+        self.state = ''
 
 
         # -------------------------------------------------- #
@@ -48,9 +49,10 @@ class MainWindow():
         self.console_text.tag_configure('green', foreground='#27ae60')
         self.console_text.tag_configure('blue', foreground='#2980b9')
 
-        self.exit_btn = ttk.Button(self.btn_frame, width=18, text='Exit', command=self.close_window)
-        self.open_btn = ttk.Button(self.btn_frame, width=18, text='Open', command=self.file_browser)
-        self.save_btn = ttk.Button(self.btn_frame, width=18, text='Save', command=self.save_output)
+        self.exit_btn = ttk.Button(self.btn_frame, width=18, text='Close Parser', command=self.close_window)
+        self.open_btn = ttk.Button(self.btn_frame, width=18, text='Open Data', command=self.file_browser)
+        self.save_btn = ttk.Button(self.btn_frame, width=18, text='Save to CSV', command=self.save_output)
+        self.save_btn.config(state=DISABLED)
 
 
         # -------------------------------------------------- #
@@ -118,13 +120,18 @@ class MainWindow():
 
 
     def save_output(self):
-        save_path = 'results/' + time.strftime('%d_%m_%Y') + '/'
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        file_path = save_path + '.csv'
+        # Open save file dialog, automatically set extension to csv
+        # After output, reset program to initial state
+        file_path = filedialog.asksaveasfile(mode='w', defaultextension='.csv')
         self.dataframe.to_csv(file_path)
-        self.update_console('\nData saved to ' + file_path)
         self.dataframe = ''
+        self.state = ''
+        self.save_btn.config(state=DISABLED)
+        self.options_list.set('')
+        self.current_file.set('No file loaded.')
+        self.update_console('\n\nData saved.', 'green')
+        self.update_console('-' * 70)
+        self.update_console('Ready, Waiting for csv/xls/xlsx file...')
 
 
     def update_console(self, output, tag=None):
@@ -139,23 +146,24 @@ class MainWindow():
         # Handle user selection within listbox widget depending on program state
         widget = event.widget
         selection = widget.curselection()
-        value = widget.get(selection[0])
-        self.update_console(' > ' + value, 'green')
-        if self.state == 'beginning':
-            if value == 'Scan Column Composition':
-                self.state = 'column_for_scan'
-                self.pick_column(self.dataframe)
-            elif value == 'Keyword Search':
-                self.state = 'column_for_keyword'
-                self.pick_column(self.dataframe)
-        else:
-            self.column_choice = value
-            self.options_list.set('')
-            if self.state == 'column_for_scan':
-                self.scan_column(self.dataframe)
-                self.program_begin()
-            elif self.state == 'column_for_keyword':
-                self.term_prompt()
+        if len(selection) > 0:
+            value = widget.get(selection[0])
+            self.update_console(' > ' + value, 'green')
+            if self.state == 'beginning':
+                if value == 'Scan Column Composition':
+                    self.state = 'column_for_scan'
+                    self.pick_column(self.dataframe)
+                elif value == 'Keyword Search':
+                    self.state = 'column_for_keyword'
+                    self.pick_column(self.dataframe)
+            else:
+                self.column_choice = value
+                self.options_list.set('')
+                if self.state == 'column_for_scan':
+                    self.scan_column(self.dataframe)
+                    self.program_begin()
+                elif self.state == 'column_for_keyword':
+                    self.term_prompt()
 
 
     def get_search_input(self, event):
@@ -176,6 +184,7 @@ class MainWindow():
                 load_message = '\nFile loaded: ' + os.path.basename(self.data_file) + ' (' + str(len(self.dataframe)) + ' rows in file)'
                 self.update_console(load_message)
                 self.current_file.set('File in use: ' + os.path.basename(self.data_file))
+                self.save_btn.config(state=NORMAL)
                 self.program_begin()
             elif not self.data_file:
                 pass
