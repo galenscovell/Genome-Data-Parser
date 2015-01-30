@@ -120,12 +120,18 @@ class MainWindow():
 
 
     def save_output(self):
-        # Open save file dialog, automatically set extension to csv
-        # After output, reset program to initial state
-        file_path = filedialog.asksaveasfile(mode='w', defaultextension='.csv')
+        # Auto create dated folders within 'results' folder
+        dir_path = 'results/' + time.strftime('%d_%m_%Y') + '/'
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        # Open save file dialog, automatically set extension to CSV
+        file_path = filedialog.asksaveasfile(mode='w', defaultextension='.csv', initialdir=dir_path)
         self.dataframe.to_csv(file_path)
+        # After output, reset program to initial state
         self.dataframe = ''
         self.state = ''
+        self.column_choice = ''
+        self.search_term = ''
         self.save_btn.config(state=DISABLED)
         self.options_list.set('')
         self.current_file.set('No file loaded.')
@@ -172,6 +178,7 @@ class MainWindow():
         self.search_input.delete(0, END)
         self.search_input.config(state=DISABLED)
         self.update_console(' > ' + self.search_term, 'green')
+        self.search_keyword(self.dataframe, self.column_choice, self.search_term)
             
 
     def file_browser(self):
@@ -185,6 +192,7 @@ class MainWindow():
                 self.update_console(load_message)
                 self.current_file.set('File in use: ' + os.path.basename(self.data_file))
                 self.save_btn.config(state=NORMAL)
+                self.original_dataframe_length = len(self.dataframe)
                 self.program_begin()
             elif not self.data_file:
                 pass
@@ -270,6 +278,36 @@ class MainWindow():
         self.update_console('\nChart Output ------------------------------\n', 'green')
 
 
+    def search_keyword(self, df, chosen_column, search_term):
+        # Return all rows with term in specified column
+        row_index = -1
+        row_list = []
+        search_results = 0
+        for row in df[chosen_column]:
+            row_index += 1
+            if type(row) is list and ';' in row:
+                row_subarray = row.split(';')
+                if search_term in row_subarray:
+                    search_results += 1
+                    row_list.append(row_index)
+            else:
+                if search_term in row:
+                    search_results += 1
+                    row_list.append(row_index)
+
+        if search_results > 0:
+            self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+        else:
+            self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+
+        searched_data = []
+        for index in row_list:
+            searched_data.append(df.irow(index))
+        self.dataframe = pd.DataFrame(data=searched_data)
+        self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows in file, original was ' + str(self.original_dataframe_length) + ' rows)\n')
+        self.column_choice = ''
+        self.search_term = ''
+        self.program_begin()
 
 
 
