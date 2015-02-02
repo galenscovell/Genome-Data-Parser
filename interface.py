@@ -34,7 +34,7 @@ class MainWindow():
         self.console_text = Text(self.console_frame, width=70, height=20, font=self.regular_font, wrap=WORD, fg='#2c3e50', relief='groove')
         self.console_scrollbar = ttk.Scrollbar(self.console_frame, command=self.console_text.yview)
         self.console_text.config(yscrollcommand=self.console_scrollbar.set)
-        self.console_text.insert(END, 'Data Parser' + (' ' * 49) + time.strftime('%d/%m/%Y'))
+        self.console_text.insert(END, 'Data Parser' + (' ' * 49) + time.strftime('%m/%d/%Y'))
 
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
@@ -121,7 +121,7 @@ class MainWindow():
 
     def save_output(self):
         # Auto create dated folders within 'results' folder
-        dir_path = 'results/' + time.strftime('%d_%m_%Y') + '/'
+        dir_path = 'results/' + time.strftime('%m_%d_%Y') + '/'
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
         # Open save file dialog, automatically set extension to CSV
@@ -156,7 +156,7 @@ class MainWindow():
             value = widget.get(selection[0])
             self.update_console(' > ' + value, 'green')
             if self.state == 'beginning':
-                if value == 'Scan Column Composition':
+                if value == 'Column Composition':
                     self.state = 'column_for_scan'
                     self.pick_column(self.dataframe)
                 elif value == 'Keyword Search':
@@ -175,10 +175,11 @@ class MainWindow():
     def get_search_input(self, event):
         # Collect user search term while entry is enabled
         self.search_term = self.search_input.get()
-        self.search_input.delete(0, END)
-        self.search_input.config(state=DISABLED)
-        self.update_console(' > ' + self.search_term, 'green')
-        self.search_keyword(self.dataframe, self.column_choice, self.search_term)
+        if self.search_term:
+            self.search_input.delete(0, END)
+            self.search_input.config(state=DISABLED)
+            self.update_console(' > ' + self.search_term, 'green')
+            self.search_keyword(self.dataframe, self.column_choice, self.search_term)
             
 
     def file_browser(self):
@@ -208,8 +209,8 @@ class MainWindow():
 
     def program_begin(self):
         # Greet user with initial options and set program state
-        self.update_console('Select [Keyword Search] or [Scan Column Composition]', 'blue')
-        self.options_list.set(('Keyword Search', 'Scan Column Composition'))
+        self.update_console('Select [Keyword Search] or [Column Composition]', 'blue')
+        self.options_list.set(('Keyword Search', 'Column Composition'))
         self.state = 'beginning'
 
 
@@ -237,7 +238,8 @@ class MainWindow():
 
     def term_prompt(self):
         # Enable entry widget and set program to wait for user search term
-        self.update_console('\nEnter Search Term Below (Case-Sensitive)', 'blue')
+        self.update_console('\nEnter Search Term below', 'blue')
+        self.update_console('Numerical Range: \'>\' or \'<\' (e.g. \'>500\')', 'blue')
         self.search_input.config(state=NORMAL)
         self.search_input.focus()
         self.state = ''
@@ -280,18 +282,31 @@ class MainWindow():
 
     def search_keyword(self, df, chosen_column, search_term):
         # Return all rows with term in specified column
+        # Not case-sensitive
         row_index = -1
         row_list = []
         search_results = 0
         for row in df[chosen_column]:
             row_index += 1
-            if type(row) is list and ';' in row:
-                row_subarray = row.split(';')
-                if search_term in row_subarray:
+            # Columns with numerical values check for values within range
+            if type(row) not in (str, list):
+                if search_term[0] == '>' and float(search_term[1:]) <= row:
                     search_results += 1
                     row_list.append(row_index)
-            else:
-                if search_term in row:
+                elif search_term[0] == '<' and float(search_term[1:]) >= row:
+                    search_results += 1
+                    row_list.append(row_index)
+                else:
+                    pass
+            # Columns with subarrays split rows and check each element
+            elif type(row) is list and ';' in row:
+                row_subarray = row.split(';')
+                if search_term in row_subarray or search_term.capitalize() in row_subarray or search_term.lower() in row_subarray or search_term.upper() in row_subarray:
+                    search_results += 1
+                    row_list.append(row_index)
+            # Columns composed of strings check for term anywhere
+            elif type(row) is str:
+                if search_term in row or search_term.capitalize() in row or search_term.lower() in row or search_term.upper() in row:
                     search_results += 1
                     row_list.append(row_index)
         # If results, push to console and update dataframe
