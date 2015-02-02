@@ -238,8 +238,8 @@ class MainWindow():
 
     def term_prompt(self):
         # Enable entry widget and set program to wait for user search term
-        self.update_console('\nEnter Search Term below', 'blue')
-        self.update_console('Numerical Range: \'>\' or \'<\' (e.g. \'>500\')', 'blue')
+        self.update_console('\nEnter Search Term (e.g. \'acetylation\')', 'blue')
+        self.update_console('or Numerical Range (e.g. \'<1500\', \'>1e-40\')', 'blue')
         self.search_input.config(state=NORMAL)
         self.search_input.focus()
         self.state = ''
@@ -269,7 +269,7 @@ class MainWindow():
                 sizes.append(percentage)
         else:
             percentage = (analyzed / total) * 100
-            labels = ['Searched: ' + str(round(percentage, 2)) + '%', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
+            labels = ['Searched: ' + str(round(percentage, 2)) + '%' + ' (' + str(analyzed) + 'rows)', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
             sizes = [percentage, 100 - percentage]
         patches, texts = plt.pie(sizes, colors=colors, startangle=0)
         plt.legend(patches, labels, loc='best')
@@ -277,7 +277,7 @@ class MainWindow():
         plt.tight_layout()
         plt.ion()
         plt.show()
-        self.update_console('\nChart Output ------------------------------\n', 'green')
+        self.update_console('\n---- Chart Output ------------------------------\n', 'green')
 
 
     def search_keyword(self, df, chosen_column, search_term):
@@ -316,7 +316,7 @@ class MainWindow():
             for index in row_list:
                 searched_data.append(df.irow(index))
             self.dataframe = pd.DataFrame(data=searched_data)
-            self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows in file, original was ' + str(self.original_dataframe_length) + ' rows)\n')
+            self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows, original was ' + str(self.original_dataframe_length) + ' rows)\n')
             self.create_graph(search_results, self.original_dataframe_length)
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
