@@ -10,6 +10,7 @@ from tkinter import ttk, font, messagebox
 
 
 class MainWindow():
+    """Primary parser GUI."""
 
     def __init__(self, root):
         self.root = root
@@ -113,13 +114,14 @@ class MainWindow():
     # -                GUI Functions                   - #
     # -------------------------------------------------- #
     def close_window(self):
-        # Popup message on exit attempts
+        """Popup message on exit attempts."""
         if messagebox.askyesno(message='Are you sure you want to quit? Any unsaved results will be lost.', title='Close Parser', icon='info'):
             self.root.destroy()
             sys.exit()
 
 
     def save_output(self):
+        """Handle save output on user request."""
         # Auto create dated folders within 'results' folder
         dir_path = 'results/' + time.strftime('%m_%d_%Y') + '/'
         if not os.path.exists(dir_path):
@@ -141,7 +143,7 @@ class MainWindow():
 
 
     def update_console(self, output, tag=None):
-        # Handle text display for console widget
+        """Handle text display for console widget."""
         self.console_text.config(state=NORMAL)
         self.console_text.insert(END, '\n' + output, tag)
         self.console_text.see(END)
@@ -149,7 +151,7 @@ class MainWindow():
 
 
     def select_list_item(self, event):
-        # Handle user selection within listbox widget depending on program state
+        """Handle selection within listbox depending on program state."""
         widget = event.widget
         selection = widget.curselection()
         if len(selection) > 0:
@@ -173,7 +175,7 @@ class MainWindow():
 
 
     def get_search_input(self, event):
-        # Collect user search term while entry is enabled
+        """Collect user search term while entry is enabled."""
         self.search_term = self.search_input.get()
         if self.search_term:
             self.search_input.delete(0, END)
@@ -183,6 +185,7 @@ class MainWindow():
             
 
     def file_browser(self):
+        """Handle data selection by user."""
         # Open file browser, allow selection of csv/xls/xlsx only
         if len(self.dataframe) == 0:
             self.data_file = filedialog.askopenfilename(parent=self.root, filetypes=(('CSV files', '*.csv'),('Excel files', '*.xls;*.xlsx')))
@@ -208,7 +211,7 @@ class MainWindow():
 
 
     def program_begin(self):
-        # Greet user with initial options and set program state
+        """Greet user with initial options and set program state."""
         self.update_console('Select [Keyword Search] or [Column Composition]', 'blue')
         self.options_list.set(('Keyword Search', 'Column Composition'))
         self.state = 'beginning'
@@ -219,7 +222,7 @@ class MainWindow():
     # -                Parser Functions                - #
     # -------------------------------------------------- #
     def create_dataframe(self, data_file):
-        # Create dataframe via different methods depending on extension type
+        """Create dataframe depending on extension type."""
         if data_file.endswith('.csv'):
             dataframe = pd.read_csv(data_file, header=0)
         elif data_file.endswith('.xls') or data_file.endswith('.xlsx'):
@@ -228,7 +231,7 @@ class MainWindow():
 
 
     def pick_column(self, df):
-        # Create list of column headers within df and push them to listbox
+        """Create column headers list within df, push them to listbox."""
         header_info = list(df)
         header_message = ', '.join(list(df))
         self.update_console('\nSelect Column of Interest', 'blue')
@@ -237,7 +240,7 @@ class MainWindow():
 
 
     def term_prompt(self):
-        # Enable entry widget and set program to wait for user search term
+        """Enable entry widget, set program to wait for user search term."""
         self.update_console('\nEnter Search Term (e.g. \'acetylation\')', 'blue')
         self.update_console('or Numerical Range (e.g. \'<1500\', \'>1e-40\')', 'blue')
         self.search_input.config(state=NORMAL)
@@ -246,7 +249,7 @@ class MainWindow():
 
 
     def scan_column(self, df):
-        # Scan for all unique elements in column and push them to chart creation
+        """Scan for unique elements in column, push them to chart creation."""
         column_total = []
         column_unique = []
         for row in df[self.column_choice]:
@@ -257,7 +260,7 @@ class MainWindow():
 
 
     def create_graph(self, analyzed, total):
-        # Pie chart creation and output
+        """Pie chart creation and output."""
         labels = []
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
@@ -281,7 +284,7 @@ class MainWindow():
 
 
     def search_keyword(self, df, chosen_column, search_term):
-        # Return all rows with term in specified column
+        """Return all rows with term in specified column."""
         # Not case-sensitive
         row_index = -1
         row_list = []
@@ -329,7 +332,7 @@ class MainWindow():
 
 
 def create_interface():
-    # Init GUI root; set icon, dimensions and properties
+    """Init GUI root; set icon, dimensions and properties."""
     root = Tk()
     
     img = PhotoImage(file='assets/icon.gif')
