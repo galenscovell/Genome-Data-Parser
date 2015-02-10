@@ -161,7 +161,7 @@ class MainWindow():
                 if value == 'Column Composition':
                     self.state = 'column_for_scan'
                     self.pick_column(self.dataframe)
-                elif value == 'Keyword Search':
+                elif value == 'Search':
                     self.state = 'column_for_keyword'
                     self.pick_column(self.dataframe)
             else:
@@ -212,8 +212,8 @@ class MainWindow():
 
     def program_begin(self):
         """Greet user with initial options and set program state."""
-        self.update_console('Select [Keyword Search] or [Column Composition]', 'blue')
-        self.options_list.set(('Keyword Search', 'Column Composition'))
+        self.update_console('Select [Search] or [Column Composition]', 'blue')
+        self.options_list.set(('Search', 'Column Composition'))
         self.state = 'beginning'
 
 
@@ -250,30 +250,71 @@ class MainWindow():
 
     def scan_column(self, df):
         """Scan for unique elements in column, push them to chart creation."""
-        column_total = []
-        column_unique = []
+        total = []
+        unique = []
         for row in df[self.column_choice]:
-            if row not in column_total:
-                column_unique.append(row)
-            column_total.append(row)
-        self.create_graph(column_unique, column_total)
+            if type(row) in (list, str):
+
+                # If subarray present, proceed with splitted elements
+                if ';' in row:
+                    row_subarray = row.split(';')
+                    # Remove empty elements from subarray
+                    idx = 0
+                    for element in row_subarray:
+                        if element == '':
+                            del row_subarray[idx]
+                        idx += 1
+                    # Sort elements by unique
+                    for element in row_subarray:
+                        if element not in total:
+                            unique.append(element)
+                            total.append(element)
+                        elif element in total:
+                            total.append(element)
+
+                # Work with entire row if no subarray present
+                else:
+                    if row not in total:
+                        unique.append(row)
+                        total.append(row)
+                    else:
+                        total.append(row)
+            elif row not in total:
+                unique.append(row)
+                total.append(row)
+            else:
+                total.append(row)
+        self.create_graph(unique, total)
 
 
     def create_graph(self, analyzed, total):
         """Pie chart creation and output."""
         labels = []
         sizes = []
-        colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22']
+        colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
+
+        # If comparing multiple elements to each other
         if type(analyzed) is list:
+            analyzed_dict = {}
             for element in analyzed:
-                percentage = (total.count(element) / len(total)) * 100
-                title = element + ': ' + str(round(percentage, 2)) + '%'
-                labels.append(title)
-                sizes.append(percentage)
+                percentage = round((total.count(element) / len(total)) * 100, 2)
+                title = str(element) + ': ' + str(percentage)
+                analyzed_dict[title] = percentage
+            # Create list with 10 max percentages within analyzed_dict
+            top_analyzed = sorted(analyzed_dict, key=analyzed_dict.get, reverse=True)[:10]
+            # Add these top values to labels/size for pie-chart
+            for item in top_analyzed:
+                splitted = item.split(': ')
+                labels.append(item + '%')
+                sizes.append(splitted[1])
+
+        # If comparing one search to the whole
         else:
-            percentage = (analyzed / total) * 100
-            labels = ['Searched: ' + str(round(percentage, 2)) + '%' + ' (' + str(analyzed) + 'rows)', 'Remaining: ' + str(round(100 - percentage, 2)) + '%']
+            percentage = round((analyzed / total) * 100, 2)
+            labels = ['Searched: ' + str(round(percentage, 2)) + '%' + ' (' + str(analyzed) + ' rows)', 'Remaining: ' + str(100 - percentage) + '%']
             sizes = [percentage, 100 - percentage]
+
+        plt.rcParams['font.size'] = 8.0
         patches, texts = plt.pie(sizes, colors=colors, startangle=0)
         plt.legend(patches, labels, loc='best')
         plt.axis('equal')
@@ -291,7 +332,7 @@ class MainWindow():
         search_results = 0
         for row in df[chosen_column]:
             row_index += 1
-            # Columns with numerical values check for values within range
+            # Rows with numerical values check for values within range
             if type(row) not in (str, list):
                 if search_term[0] == '>' and float(search_term[1:]) <= row:
                     search_results += 1
@@ -301,13 +342,13 @@ class MainWindow():
                     row_list.append(row_index)
                 else:
                     pass
-            # Columns with subarrays split rows and check each element
+            # Rows with subarrays split and check each element
             elif type(row) is list and ';' in row:
                 row_subarray = row.split(';')
                 if search_term in row_subarray or search_term.capitalize() in row_subarray or search_term.lower() in row_subarray or search_term.upper() in row_subarray:
                     search_results += 1
                     row_list.append(row_index)
-            # Columns composed of strings check for term anywhere
+            # Rows composed of strings check for term anywhere
             elif type(row) is str:
                 if search_term in row or search_term.capitalize() in row or search_term.lower() in row or search_term.upper() in row:
                     search_results += 1
