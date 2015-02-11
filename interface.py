@@ -253,32 +253,30 @@ class MainWindow():
         total = []
         unique = []
         for row in df[self.column_choice]:
+            # If row is list or string check for subarray
             if type(row) in (list, str):
 
-                # If subarray present, proceed with splitted elements
+                # If subarray present, use splitted elements
                 if ';' in row:
                     row_subarray = row.split(';')
-                    # Remove empty elements from subarray
-                    idx = 0
-                    for element in row_subarray:
-                        if element == '':
-                            del row_subarray[idx]
-                        idx += 1
                     # Sort elements by unique
                     for element in row_subarray:
-                        if element not in total:
-                            unique.append(element)
-                            total.append(element)
-                        elif element in total:
-                            total.append(element)
+                        if element != '':
+                            if element not in total:
+                                unique.append(element)
+                                total.append(element)
+                            elif element in total:
+                                total.append(element)
 
-                # Work with entire row if no subarray present
+                # If no subarray present, use entire row
                 else:
                     if row not in total:
                         unique.append(row)
                         total.append(row)
                     else:
                         total.append(row)
+
+            # If row is not list or string, use entire row
             elif row not in total:
                 unique.append(row)
                 total.append(row)
