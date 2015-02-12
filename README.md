@@ -1,4 +1,4 @@
-![alt tag](http://galenscovell.github.io/css/pics/parser.png)
+<img src='http://galenscovell.github.io/css/pics/parser.png' width=600px />
 
 # Transcriptome Data Parser
 
