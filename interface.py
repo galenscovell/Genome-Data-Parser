@@ -309,7 +309,8 @@ class MainWindow():
         # If comparing one search to the whole
         else:
             percentage = round((analyzed / total) * 100, 2)
-            labels = ['Searched: ' + str(round(percentage, 2)) + '%' + ' (' + str(analyzed) + ' rows)', 'Remaining: ' + str(100 - percentage) + '%']
+            remnant = round(100 - percentage, 2)
+            labels = ['Searched: ' + str(percentage) + '%' + ' (' + str(analyzed) + ' rows)', 'Remaining: ' + str(remnant) + '%']
             sizes = [percentage, 100 - percentage]
 
         plt.rcParams['font.size'] = 8.0
