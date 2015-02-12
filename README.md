@@ -1,3 +1,5 @@
+![alt tag](http://galenscovell.github.io/css/pics/parser.png)
+
 # Transcriptome Data Parser
 
 This repository is dedicated to the design and construction of a data parser for the Tublitz Neuroscience lab at the University of Oregon. All of the actual data is kept private.
