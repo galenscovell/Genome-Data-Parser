@@ -1,4 +1,4 @@
-<img src='http://galenscovell.github.io/css/pics/parser.png' width=600px />
+<img src='http://galenscovell.github.io/css/pics/parser.png' width=500px />
 
 # Transcriptome Data Parser
 
