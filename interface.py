@@ -129,7 +129,13 @@ class MainWindow():
         # Open save file dialog, automatically set extension to CSV
         file_path = filedialog.asksaveasfile(mode='w', defaultextension='.csv', initialdir=dir_path)
         self.dataframe.to_csv(file_path)
-        # After output, reset program to initial state
+        self.update_console('\n' + ('-' * 70))
+        self.update_console('Data saved.', 'green')
+        return self.reset_parser()
+
+
+    def reset_parser(self):
+        self.update_console('\n' + ('-' * 70))
         self.dataframe = ''
         self.state = ''
         self.column_choice = ''
@@ -137,8 +143,6 @@ class MainWindow():
         self.save_btn.config(state=DISABLED)
         self.options_list.set('')
         self.current_file.set('No file loaded.')
-        self.update_console('\n\nData saved.', 'green')
-        self.update_console('-' * 70)
         self.update_console('Ready, Waiting for csv/xls/xlsx file...')
 
 
@@ -197,17 +201,14 @@ class MainWindow():
                 self.current_file.set('File in use: ' + os.path.basename(self.data_file))
                 self.save_btn.config(state=NORMAL)
                 self.original_dataframe_length = len(self.dataframe)
-                self.program_begin()
+                return self.program_begin()
             elif not self.data_file:
-                pass
-            else:
-                # If user somehow breaks it (as is their wont)
-                self.update_console('File extension must be .csv, .xls, or .xlsx')
+                return None
         else:
             # If dataframe currently loaded, confirmation to close and open new
             if messagebox.askyesno(message='Open new data? This will cause previous unsaved data to be lost.', title='Open New', icon='info'):
-                self.dataframe = ''
-                self.file_browser()
+                self.reset_parser()
+                return self.file_browser()
 
 
     def program_begin(self):
@@ -241,7 +242,7 @@ class MainWindow():
 
     def term_prompt(self):
         """Enable entry widget, set program to wait for user search term."""
-        self.update_console('\nEnter Search Term (e.g. \'acetylation\')', 'blue')
+        self.update_console('\nEnter Search Term (e.g. \'acetylation\', \'3D-structure\')', 'blue')
         self.update_console('or Numerical Range (e.g. \'<1500\', \'>1e-40\')', 'blue')
         self.search_input.config(state=NORMAL)
         self.search_input.focus()
@@ -282,7 +283,7 @@ class MainWindow():
                 total.append(row)
             else:
                 total.append(row)
-        self.create_graph(unique, total)
+        return self.create_graph(unique, total)
 
 
     def create_graph(self, analyzed, total):
@@ -292,32 +293,33 @@ class MainWindow():
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
 
         # If comparing multiple elements to each other
+        plt.suptitle('Top 10 Results', fontsize=16)
         if type(analyzed) is list:
             analyzed_dict = {}
             for element in analyzed:
                 percentage = round((total.count(element) / len(total)) * 100, 2)
-                title = str(element) + ': ' + str(percentage)
+                title = str(element) + ': ' + str(total.count(element)) + ' rows'
                 analyzed_dict[title] = percentage
+
             # Create list with 10 max percentages within analyzed_dict
             top_analyzed = sorted(analyzed_dict, key=analyzed_dict.get, reverse=True)[:10]
-            # Add these top values to labels/size for pie-chart
+
+            # Add these top 10 values to labels/size for pie-chart
             for item in top_analyzed:
-                splitted = item.split(': ')
-                labels.append(item + '%')
-                sizes.append(splitted[1])
+                labels.append(item)
+                sizes.append(analyzed_dict[item])
 
         # If comparing one search to the whole
         else:
+            plt.suptitle('Searched Relative to Whole', fontsize=16)
             percentage = round((analyzed / total) * 100, 2)
             remnant = round(100 - percentage, 2)
             labels = ['Searched: ' + str(percentage) + '%' + ' (' + str(analyzed) + ' rows)', 'Remaining: ' + str(remnant) + '%']
             sizes = [percentage, 100 - percentage]
 
-        plt.rcParams['font.size'] = 8.0
-        patches, texts = plt.pie(sizes, colors=colors, startangle=0)
-        plt.legend(patches, labels, loc='best')
+        patches, texts = plt.pie(sizes, labels=sizes, colors=colors, startangle=90)
+        plt.legend(patches, labels, loc='center', bbox_to_anchor=[0.85, 0.125], fontsize=10)
         plt.axis('equal')
-        plt.tight_layout()
         plt.ion()
         plt.show()
         self.update_console('\n---- Chart Output ------------------------------\n', 'green')
@@ -339,8 +341,12 @@ class MainWindow():
                 elif search_term[0] == '<' and float(search_term[1:]) >= row:
                     search_results += 1
                     row_list.append(row_index)
-                else:
-                    pass
+                elif search_term[0] == '=' and float(search_term[1:]) == row:
+                    search_results += 1
+                    row_list.append(row_index)
+                elif search_term[0] not in ('<', '>', '='):
+                    self.update_console('\nNumerical values require < or > to specify range.')
+                    return self.term_prompt()
             # Rows with subarrays split and check each element
             elif type(row) is list and ';' in row:
                 row_subarray = row.split(';')
@@ -366,7 +372,7 @@ class MainWindow():
         # Reset choices and go to beginning of program
         self.column_choice = ''
         self.search_term = ''
-        self.program_begin()
+        return self.program_begin()
 
 
 
