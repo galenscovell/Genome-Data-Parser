@@ -380,10 +380,13 @@ class MainWindow():
 def create_interface():
     """Init GUI root; set icon, dimensions and properties."""
     root = Tk()
-    
-    img = PhotoImage(file='assets/icon.gif')
-    root.call('wm', 'iconphoto', root._w, '-default', img)
+
+    # current_dir = os.path.dirname(__file__) 
+    # filename = os.path.join(current_dir, 'icon.gif')
+    # img = PhotoImage(file=filename)
+    # root.call('wm', 'iconphoto', root._w, '-default', img)
     root.title('Data Parser')
+    
 
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()
