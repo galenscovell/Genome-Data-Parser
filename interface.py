@@ -176,21 +176,21 @@ class MainWindow():
             self.update_console(' > ' + value, 'green')
             if self.state == 'beginning':
                 if value == 'Column Composition':
-                    self.state = 'column_for_scan'
+                    self.state = 'column_scan'
                     self.pick_column(self.dataframe)
-                elif value == 'General Search':
-                    self.state = 'column_for_keyword'
+                elif value == 'Search, Relative Term':
+                    self.state = 'relative_search'
                     self.pick_column(self.dataframe)
-                elif value == 'Specific Search':
-                    self.state = 'column_for_keyword'
+                elif value == 'Search, Exact Term':
+                    self.state = 'exact_search'
                     self.pick_column(self.dataframe)
             else:
                 self.column_choice = value
                 self.options_list.set('')
-                if self.state == 'column_for_scan':
+                if self.state == 'column_scan':
                     self.scan_column(self.dataframe)
                     self.program_begin()
-                elif self.state == 'column_for_keyword':
+                elif self.state in ('relative_search', 'exact_search'):
                     self.term_prompt()
 
 
@@ -230,7 +230,7 @@ class MainWindow():
     def program_begin(self):
         """Greet user with initial options and set program state."""
         self.update_console('Select Parser Function', 'blue')
-        self.options_list.set(('General Search', 'Specific Search', 'Column Composition'))
+        self.options_list.set(('Search, Relative Term', 'Search, Exact Term', 'Column Composition'))
         self.state = 'beginning'
 
 
@@ -262,7 +262,6 @@ class MainWindow():
         self.update_console('or Numerical Range (e.g. \'<1500\', \'>1e-40\')', 'blue')
         self.search_input.config(state=NORMAL)
         self.search_input.focus()
-        self.state = ''
 
 
     def scan_column(self, df):
@@ -272,7 +271,7 @@ class MainWindow():
         for row in df[self.column_choice]:
 
             # If row is list or string check for subarray
-            if type(row) in (list, str):
+            if type(row) is str:
 
                 # If subarray present, split elements
                 if ';' in row:
@@ -297,7 +296,7 @@ class MainWindow():
                     else:
                         total.append(row)
 
-            # If row is not list or string, use entire row
+            # If row is not string, use entire row (numerical value)
             elif row not in total:
                 unique.append(row)
                 total.append(row)
@@ -308,7 +307,7 @@ class MainWindow():
 
     def create_graph(self, analyzed, total):
         """Pie chart creation and output."""
-        plt.rcParams['figure.figsize'] = 13, 7
+        plt.rcParams['figure.figsize'] = 14, 7
         labels = []
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
@@ -323,15 +322,15 @@ class MainWindow():
                 title = str(element)
                 analyzed_dict[title] = percentage
             # Add these top 15 values to labels/size for pie-chart
-            i = 15
-            while i > 0:
+            i = 0
+            while i < 15 and len(analyzed_dict) > 0:
                 top = max(analyzed_dict, key=analyzed_dict.get)
                 labels.append(top)
                 sizes.append(analyzed_dict[top])
                 analyzed_total += total.count(top)
                 del analyzed_dict[top]
-                i -= 1
-            plt.suptitle('Top 15 Results in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' in total dataset)', fontsize=18)
+                i += 1
+            plt.suptitle('Top ' + str(i) + ' Results in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' in total dataset)', fontsize=18)
 
         # If comparing one search to the whole
         else:
@@ -341,6 +340,7 @@ class MainWindow():
             plt.suptitle(str(self.search_term) + ' in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed) + ' out of ' + str(total) + ' in total dataset)', fontsize=18)
 
         plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.05)
+        plt.rcParams['font.size'] = 9
         plt.axis('equal')
         plt.ion()
         plt.show()
@@ -355,8 +355,8 @@ class MainWindow():
         for row in df[chosen_column]:
             row_index += 1
 
-            # Rows with numerical values check for values within range
-            if type(row) not in (str, list):
+            # Rows with numpy numerical values check for values within range
+            if 'numpy' in str(type(row)):
                 # Test for NaN
                 if row != row:
                     pass
@@ -373,20 +373,22 @@ class MainWindow():
                     self.update_console('\nNumerical values require < or > to specify range.')
                     return self.term_prompt()
 
-            # Rows with subarrays split and check each element, regex
-            elif type(row) is list and ';' in row:
-                row_subarray = row.split(';')
-                if re.search('(?i)' + search_term, row_subarray):
-                    search_results += 1
-                    row_list.append(row_index)
-
-            # Rows composed of strings check for term anywhere, regex
+            # Rows composed of strings split and check elements, regex
             elif type(row) is str:
-                if re.search('(?i)' + search_term, row):
-                    search_results += 1
-                    row_list.append(row_index)
+                row_subarray = row.split(';')
+                for element in row_subarray:
+                    if self.state == 'relative_search':
+                        if re.search('(?i)' + search_term, element):
+                            search_results += 1
+                            row_list.append(row_index)
+                    elif self.state == 'exact_search':
+                        if re.match('(?i)' + search_term, element):
+                            search_results += 1
+                            row_list.append(row_index)
+            else:
+                print(type(row), 'unexpected.')
 
-        # If results, push to console and update dataframe
+        # If results, update console/dataframe, push to graph creation
         if search_results > 0:
             self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
             searched_data = []
