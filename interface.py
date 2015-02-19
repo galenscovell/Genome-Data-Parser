@@ -4,6 +4,7 @@ import sys, os.path, time, xlrd, re
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+import numpy as np
 
 from tkinter import *
 from tkinter import ttk, font, messagebox
@@ -175,23 +176,24 @@ class MainWindow():
             value = widget.get(selection[0])
             self.update_console(' > ' + value, 'green')
             if self.state == 'beginning':
-                if value == 'Column Composition':
+                if value == 'Create Pie-Chart':
                     self.state = 'column_scan'
-                    self.pick_column(self.dataframe)
                 elif value == 'Search, Relative Term':
                     self.state = 'relative_search'
-                    self.pick_column(self.dataframe)
                 elif value == 'Search, Exact Term':
                     self.state = 'exact_search'
-                    self.pick_column(self.dataframe)
+                elif value == 'Create Histogram':
+                    self.state = 'histogram'
+                self.pick_column(self.dataframe)
             else:
                 self.column_choice = value
                 self.options_list.set('')
                 if self.state == 'column_scan':
                     self.scan_column(self.dataframe)
-                    self.program_begin()
                 elif self.state in ('relative_search', 'exact_search'):
                     self.term_prompt()
+                elif self.state == 'histogram':
+                    self.create_histogram()
 
 
     def get_search_input(self, event):
@@ -230,7 +232,7 @@ class MainWindow():
     def program_begin(self):
         """Greet user with initial options and set program state."""
         self.update_console('Select Parser Function', 'blue')
-        self.options_list.set(('Search, Relative Term', 'Search, Exact Term', 'Column Composition'))
+        self.options_list.set(('Search, Relative Term', 'Search, Exact Term', 'Create Pie-Chart', 'Create Histogram'))
         self.state = 'beginning'
 
 
@@ -345,6 +347,25 @@ class MainWindow():
         plt.ion()
         plt.show()
         self.update_console('\n---- Chart Output ------------------------------\n', 'green')
+        return self.program_begin()
+
+
+    def create_histogram(self):
+        """Histogram creation and output."""
+        if self.column_choice != 'ContigLength':
+            self.update_console('Histogram creation only possible with ContigLength column.')
+            return self.reset_parser()
+        df_lengths = DataFrame(self.dataframe[self.column_choice])
+        df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 501, 1001, 1501, 2001, 2501, 3001], width=500)
+
+        plt.title('Histogram of ' + str(self.column_choice) + '\'s')
+        plt.xlabel(str(self.column_choice))
+        plt.ylabel('Results')
+        plt.xlim([0, 3000])
+        plt.ion()
+        plt.show()
+        self.update_console('\n---- Histogram Output --------------------------\n', 'green')
+        return self.program_begin()
 
 
     def search_keyword(self, df, chosen_column, search_term):
