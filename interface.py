@@ -39,6 +39,8 @@ class MainWindow():
 
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
+        self.detail_var = StringVar()
+        self.detail_box = ttk.Label(self.console_frame, textvariable=self.detail_var)
         self.options_list = StringVar()
         self.options_box = Listbox(self.console_frame, height=8, width=50, listvariable=self.options_list, activestyle='none', selectbackground='#2ecc71', font=self.regular_font, relief='flat', highlightbackground='#95a5a6')
         self.options_scrollbar = ttk.Scrollbar(self.console_frame, command=self.options_box.yview)
@@ -61,13 +63,14 @@ class MainWindow():
         # -------------------------------------------------- #
         self.main_frame.grid(column=0, row=0, sticky=(N, W, E, S))
         self.console_frame.grid(column=0, row=0, sticky=N)
-        self.btn_frame.grid(column=0, row=3, columnspan=3, pady=10, sticky=S)
+        self.btn_frame.grid(column=0, row=3, columnspan=3, pady=6, sticky=S)
 
         self.console_label.grid(column=0, row=0, sticky=W)
         self.current_label.grid(column=0, row=0, sticky=E, ipady=10)
         self.console_text.grid(column=0, row=1)
         self.console_scrollbar.grid(column=1, row=1, sticky=NS)
-        self.search_input.grid(column=0, row=2, pady=4, ipady=10, columnspan=2)
+        self.search_input.grid(column=0, row=2, pady=2, ipady=2, columnspan=2)
+        self.detail_box.grid(column=0, row=4)
         self.options_box.grid(column=0, row=3, columnspan=2)
         self.options_scrollbar.grid(column=1, row=3, sticky=NS)
 
@@ -92,6 +95,7 @@ class MainWindow():
         self.console_frame.rowconfigure(1, weight=3)
         self.console_frame.rowconfigure(2, weight=3)
         self.console_frame.rowconfigure(3, weight=3)
+        self.console_frame.rowconfigure(4, weight=3)
 
         self.btn_frame.columnconfigure(0, weight=3)
         self.btn_frame.columnconfigure(1, weight=3)
@@ -105,7 +109,17 @@ class MainWindow():
         self.root.protocol('WM_DELETE_WINDOW', self.close_window)
         self.options_box.bind('<Return>', self.select_list_item)
         self.search_input.bind('<Return>', self.get_search_input)
-        
+
+        self.search_input.bind('<Enter>', lambda x: self.detail_var.set('[Term entry] Enter search term then press the <Enter> key.'))
+        self.search_input.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.options_box.bind('<Enter>', lambda x: self.detail_var.set('[Current options] Left-click a selection then press the <Enter> key.'))
+        self.options_box.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.exit_btn.bind('<Enter>', lambda x: self.detail_var.set('Close the program.'))
+        self.exit_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.open_btn.bind('<Enter>', lambda x: self.detail_var.set('Open a new dataset.'))
+        self.open_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.save_btn.bind('<Enter>', lambda x: self.detail_var.set('Finish working with and save current dataset.'))
+        self.save_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
 
 
 
@@ -317,17 +331,14 @@ class MainWindow():
                 analyzed_total += total.count(top)
                 del analyzed_dict[top]
                 i -= 1
-            percentage_of_total_dataset = round(analyzed_total / total_dataset * 100, 2)
-            print(analyzed_total, total_dataset)
-            plt.suptitle('Top 15 Results in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' in total dataset)', fontsize=16)
+            plt.suptitle('Top 15 Results in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' in total dataset)', fontsize=18)
 
         # If comparing one search to the whole
         else:
-            plt.suptitle(str(self.search_term) + ' in ' + str(self.column_choice), fontsize=16)
             percentage = round((analyzed / total) * 100, 2)
-            remnant = round(100 - percentage, 2)
             labels = ['Contains ' + str(self.search_term), 'Does not contain ' + str(self.search_term)]
             sizes = [percentage, 100 - percentage]
+            plt.suptitle(str(self.search_term) + ' in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed) + ' out of ' + str(total) + ' in total dataset)', fontsize=18)
 
         plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.05)
         plt.axis('equal')
@@ -387,7 +398,7 @@ class MainWindow():
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
 
-        # Reset choices and go to beginning of program
+        # Reset choices and go to beginning of program with updated dataframe
         self.column_choice = ''
         self.search_term = ''
         return self.program_begin()
@@ -401,7 +412,7 @@ def create_interface():
     root.title('Data Parser')
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()
-    window_x, window_y = 640, 580
+    window_x, window_y = 640, 600
     x_pos = (screen_x / 2) - (window_x / 2)
     y_pos = (screen_y / 2) - (window_y / 2)
     root.geometry('%dx%d+%d+%d' % (window_x, window_y, x_pos, y_pos))
