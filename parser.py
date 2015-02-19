@@ -353,8 +353,8 @@ class MainWindow():
     def create_histogram(self):
         """Histogram creation and output."""
         if self.column_choice != 'ContigLength':
-            self.update_console('Histogram creation only possible with ContigLength column.')
-            return self.reset_parser()
+            self.update_console('Histogram creation only available for ContigLength column.')
+            return self.program_begin()
         df_lengths = DataFrame(self.dataframe[self.column_choice])
         df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 501, 1001, 1501, 2001, 2501, 3001], width=500)
 
