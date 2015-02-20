@@ -323,6 +323,16 @@ class MainWindow():
                                 total.append(element)
                             elif element in total:
                                 total.append(element)
+                elif ',' in row:
+                    row_subarray = row.split(', ')
+                    # Sort elements by unique
+                    for element in row_subarray:
+                        if element != '' and not element.endswith('.'):
+                            if element not in total:
+                                unique.append(element)
+                                total.append(element)
+                            elif element in total:
+                                total.append(element)
 
                 # If no subarray present, use entire row
                 else:
@@ -392,10 +402,15 @@ class MainWindow():
         if self.column_choice != 'ContigLength':
             self.update_console('Histogram creation only available for ContigLength column.')
             return self.program_begin()
-        df_lengths = DataFrame(self.dataframe[self.column_choice])
+        df_lengths = self.dataframe[self.column_choice]
         df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001], width=250)
+        df_range = str(df_lengths.min()) + ' - ' + str(df_lengths.max())
+        df_mean = round(df_lengths.mean(), 2)
+        df_median = round(df_lengths.median(), 2)
+        df_std = round(df_lengths.std(), 2)
 
         plt.title('Histogram of ' + str(self.column_choice) + '\'s')
+        plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range)
         plt.xlabel(str(self.column_choice))
         plt.ylabel('Results')
         plt.xlim([0, 3000])
