@@ -4,14 +4,15 @@ import sys, os.path, time, xlrd, re
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-import numpy as np
 
 from tkinter import *
 from tkinter import ttk, font, messagebox
 
 
+
+
 class MainWindow():
-    """Primary parser GUI."""
+    """Parser GUI."""
 
     def __init__(self, root):
         self.root = root
@@ -121,19 +122,25 @@ class MainWindow():
 
         self.relative_btn.bind('<Enter>', lambda x: self.detail_var.set('Find all combinations with term (\'peptide\': isopeptide, neuropeptide, peptide bond...).'))
         self.relative_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.cont_btn.bind('<Enter>', lambda x: self.detail_var.set('Enter current selection and continue.'))
         self.cont_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.exact_btn.bind('<Enter>', lambda x: self.detail_var.set('Find exact term only.'))
         self.exact_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
 
         self.search_input.bind('<Enter>', lambda x: self.detail_var.set('Enter search term then choose <Relative> or <Exact>.'))
         self.search_input.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.options_box.bind('<Enter>', lambda x: self.detail_var.set('Left-click a selection then select <Continue>.'))
         self.options_box.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.exit_btn.bind('<Enter>', lambda x: self.detail_var.set('Close the program.'))
         self.exit_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.open_btn.bind('<Enter>', lambda x: self.detail_var.set('Open a new dataset.'))
         self.open_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+        
         self.save_btn.bind('<Enter>', lambda x: self.detail_var.set('Finish working with and save current dataset.'))
         self.save_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
 
@@ -206,6 +213,17 @@ class MainWindow():
                     self.term_prompt()
                 elif self.state == 'histogram':
                     self.create_histogram()
+
+    def term_prompt(self):
+        """Enable entry widget, set program to wait for user search term."""
+        self.update_console('\nEnter search term (e.g. \'acetylation\', \'3D-structure\')', 'blue')
+        self.update_console('or numerical range (e.g. \'<1500\', \'>1e-40\')', 'blue')
+        self.update_console('NOTE: For numerical search, <Relative> and <Exact> will behave the same.', 'blue')
+        self.search_input.config(state=NORMAL)
+        self.relative_btn.config(state=NORMAL)
+        self.exact_btn.config(state=NORMAL)
+        self.cont_btn.config(state=DISABLED)
+        self.search_input.focus()
 
 
     def relative_search_event(self):
@@ -283,18 +301,6 @@ class MainWindow():
         self.update_console('\nSelect Column of Interest', 'blue')
         self.update_console(header_message)
         self.options_list.set(tuple(header_info))
-
-
-    def term_prompt(self):
-        """Enable entry widget, set program to wait for user search term."""
-        self.update_console('\nEnter search term (e.g. \'acetylation\', \'3D-structure\')', 'blue')
-        self.update_console('or numerical range (e.g. \'<1500\', \'>1e-40\')', 'blue')
-        self.update_console('NOTE: For numerical search, <Relative> and <Exact> will behave the same.', 'blue')
-        self.search_input.config(state=NORMAL)
-        self.relative_btn.config(state=NORMAL)
-        self.exact_btn.config(state=NORMAL)
-        self.cont_btn.config(state=DISABLED)
-        self.search_input.focus()
 
 
     def scan_column(self, df):
@@ -455,13 +461,14 @@ class MainWindow():
         # Reset choices and go to beginning of program with updated dataframe
         self.column_choice = ''
         self.search_term = ''
-        return self.program_begin()
+
+
 
 
 
 
 def create_interface():
-    """Init GUI root; set dimensions and properties."""
+    """Initialize GUI root; set dimensions and properties."""
     root = Tk()
     root.title('Data Parser')
     screen_x = root.winfo_screenwidth()
