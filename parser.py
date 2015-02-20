@@ -40,6 +40,12 @@ class MainWindow():
 
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
+        self.relative_btn = ttk.Button(self.console_frame, width=10, text='Relative', command=self.relative_search_event)
+        self.relative_btn.config(state=DISABLED)
+        self.cont_btn = ttk.Button(self.console_frame, width=10, text='Continue', command=self.select_list_item)
+        self.cont_btn.config(state=DISABLED)
+        self.exact_btn = ttk.Button(self.console_frame, width=10, text='Exact', command=self.exact_search_event)
+        self.exact_btn.config(state=DISABLED)
         self.detail_var = StringVar()
         self.detail_box = ttk.Label(self.console_frame, textvariable=self.detail_var)
         self.options_list = StringVar()
@@ -71,9 +77,12 @@ class MainWindow():
         self.console_text.grid(column=0, row=1)
         self.console_scrollbar.grid(column=1, row=1, sticky=NS)
         self.search_input.grid(column=0, row=2, pady=2, ipady=2, columnspan=2)
-        self.detail_box.grid(column=0, row=4)
-        self.options_box.grid(column=0, row=3, columnspan=2)
-        self.options_scrollbar.grid(column=1, row=3, sticky=NS)
+        self.relative_btn.grid(column=0, row=3, padx=(166, 0), sticky=W)
+        self.cont_btn.grid(column=0, row=3, padx=(16, 0))
+        self.exact_btn.grid(column=0, row=3, padx=(0, 150), sticky=E)
+        self.detail_box.grid(column=0, row=5)
+        self.options_box.grid(column=0, row=4, pady=(4, 4), columnspan=2)
+        self.options_scrollbar.grid(column=1, row=4, sticky=NS)
 
         self.exit_btn.grid(column=2, row=0, sticky=E)
         self.open_btn.grid(column=1, row=0, padx=(20, 20))
@@ -97,6 +106,7 @@ class MainWindow():
         self.console_frame.rowconfigure(2, weight=3)
         self.console_frame.rowconfigure(3, weight=3)
         self.console_frame.rowconfigure(4, weight=3)
+        self.console_frame.rowconfigure(5, weight=3)
 
         self.btn_frame.columnconfigure(0, weight=3)
         self.btn_frame.columnconfigure(1, weight=3)
@@ -108,12 +118,17 @@ class MainWindow():
         # -                  Key Bindings                  - #
         # -------------------------------------------------- #
         self.root.protocol('WM_DELETE_WINDOW', self.close_window)
-        self.options_box.bind('<Return>', self.select_list_item)
-        self.search_input.bind('<Return>', self.get_search_input)
 
-        self.search_input.bind('<Enter>', lambda x: self.detail_var.set('[Term entry] Enter search term then press the <Enter> key.'))
+        self.relative_btn.bind('<Enter>', lambda x: self.detail_var.set('Find all combinations with term (\'peptide\': isopeptide, neuropeptide, peptide bond...).'))
+        self.relative_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.cont_btn.bind('<Enter>', lambda x: self.detail_var.set('Enter current selection and continue.'))
+        self.cont_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+        self.exact_btn.bind('<Enter>', lambda x: self.detail_var.set('Find exact term only.'))
+        self.exact_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+
+        self.search_input.bind('<Enter>', lambda x: self.detail_var.set('Enter search term then choose <Relative> or <Exact>.'))
         self.search_input.bind('<Leave>', lambda x: self.detail_var.set(''))
-        self.options_box.bind('<Enter>', lambda x: self.detail_var.set('[Current options] Left-click a selection then press the <Enter> key.'))
+        self.options_box.bind('<Enter>', lambda x: self.detail_var.set('Left-click a selection then select <Continue>.'))
         self.options_box.bind('<Leave>', lambda x: self.detail_var.set(''))
         self.exit_btn.bind('<Enter>', lambda x: self.detail_var.set('Close the program.'))
         self.exit_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
@@ -168,20 +183,17 @@ class MainWindow():
         self.console_text.config(state=DISABLED)
 
 
-    def select_list_item(self, event):
+    def select_list_item(self, event=None):
         """Handle selection within listbox depending on program state."""
-        widget = event.widget
-        selection = widget.curselection()
+        selection = self.options_box.curselection()
         if len(selection) > 0:
-            value = widget.get(selection[0])
+            value = self.options_box.get(selection[0])
             self.update_console(' > ' + value, 'green')
             if self.state == 'beginning':
                 if value == 'Create Pie-Chart':
                     self.state = 'column_scan'
-                elif value == 'Search, Relative Term':
-                    self.state = 'relative_search'
-                elif value == 'Search, Exact Term':
-                    self.state = 'exact_search'
+                elif value == 'Search Term':
+                    self.state = 'search'
                 elif value == 'Create Histogram':
                     self.state = 'histogram'
                 self.pick_column(self.dataframe)
@@ -190,18 +202,32 @@ class MainWindow():
                 self.options_list.set('')
                 if self.state == 'column_scan':
                     self.scan_column(self.dataframe)
-                elif self.state in ('relative_search', 'exact_search'):
+                elif self.state == 'search':
                     self.term_prompt()
                 elif self.state == 'histogram':
                     self.create_histogram()
 
 
-    def get_search_input(self, event):
+    def relative_search_event(self):
+        """Set parser search state to 'relative'."""
+        self.state = 'relative_search'
+        return self.get_search_input()
+
+
+    def exact_search_event(self):
+        """Set parser search state to 'exact'."""
+        self.state = 'exact_search'
+        return self.get_search_input()
+
+
+    def get_search_input(self, event=None):
         """Collect user search term while entry is enabled."""
         self.search_term = self.search_input.get()
         if self.search_term:
             self.search_input.delete(0, END)
             self.search_input.config(state=DISABLED)
+            self.relative_btn.config(state=DISABLED)
+            self.exact_btn.config(state=DISABLED)
             self.update_console(' > ' + self.search_term, 'green')
             self.search_keyword(self.dataframe, self.column_choice, self.search_term)
             
@@ -232,7 +258,8 @@ class MainWindow():
     def program_begin(self):
         """Greet user with initial options and set program state."""
         self.update_console('Select Parser Function', 'blue')
-        self.options_list.set(('Search, Relative Term', 'Search, Exact Term', 'Create Pie-Chart', 'Create Histogram'))
+        self.options_list.set(('Search Term', 'Create Pie-Chart', 'Create Histogram'))
+        self.cont_btn.config(state=NORMAL)
         self.state = 'beginning'
 
 
@@ -260,9 +287,13 @@ class MainWindow():
 
     def term_prompt(self):
         """Enable entry widget, set program to wait for user search term."""
-        self.update_console('\nEnter Search Term (e.g. \'acetylation\', \'3D-structure\')', 'blue')
-        self.update_console('or Numerical Range (e.g. \'<1500\', \'>1e-40\')', 'blue')
+        self.update_console('\nEnter search term (e.g. \'acetylation\', \'3D-structure\')', 'blue')
+        self.update_console('or numerical range (e.g. \'<1500\', \'>1e-40\')', 'blue')
+        self.update_console('NOTE: For numerical search, <Relative> and <Exact> will behave the same.', 'blue')
         self.search_input.config(state=NORMAL)
+        self.relative_btn.config(state=NORMAL)
+        self.exact_btn.config(state=NORMAL)
+        self.cont_btn.config(state=DISABLED)
         self.search_input.focus()
 
 
@@ -356,7 +387,7 @@ class MainWindow():
             self.update_console('Histogram creation only available for ContigLength column.')
             return self.program_begin()
         df_lengths = DataFrame(self.dataframe[self.column_choice])
-        df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 501, 1001, 1501, 2001, 2501, 3001], width=500)
+        df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001], width=250)
 
         plt.title('Histogram of ' + str(self.column_choice) + '\'s')
         plt.xlabel(str(self.column_choice))
@@ -435,7 +466,7 @@ def create_interface():
     root.title('Data Parser')
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()
-    window_x, window_y = 640, 600
+    window_x, window_y = 640, 640
     x_pos = (screen_x / 2) - (window_x / 2)
     y_pos = (screen_y / 2) - (window_y / 2)
     root.geometry('%dx%d+%d+%d' % (window_x, window_y, x_pos, y_pos))
