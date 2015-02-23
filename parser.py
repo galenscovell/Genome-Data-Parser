@@ -357,6 +357,7 @@ class MainWindow():
     def create_graph(self, analyzed, total):
         """Pie chart creation and output."""
         plt.rcParams['figure.figsize'] = 14, 7
+        plt.rcParams['font.size'] = 10
         labels = []
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
@@ -389,8 +390,6 @@ class MainWindow():
             plt.suptitle(str(self.search_term) + ' in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed) + ' out of ' + str(total) + ' in total dataset)', fontsize=18)
 
         plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.05)
-        plt.rcParams['font.size'] = 9
-        plt.axis('equal')
         plt.ion()
         plt.show()
         self.update_console('\n---- Chart Output ------------------------------\n', 'green')
@@ -402,6 +401,8 @@ class MainWindow():
         if self.column_choice != 'ContigLength':
             self.update_console('Histogram creation only available for ContigLength column.')
             return self.program_begin()
+        plt.rcParams['figure.figsize'] = 14, 7
+        plt.rcParams['font.size'] = 10
         df_lengths = self.dataframe[self.column_choice]
         df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001], width=250)
         df_range = str(df_lengths.min()) + ' - ' + str(df_lengths.max())
