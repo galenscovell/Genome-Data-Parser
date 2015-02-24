@@ -4,6 +4,7 @@ import sys, os.path, time, xlrd, re
 import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+import numpy as np
 
 from tkinter import *
 from tkinter import ttk, font, messagebox
@@ -403,18 +404,26 @@ class MainWindow():
             return self.program_begin()
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
-        df_lengths = self.dataframe[self.column_choice]
-        df_lengths.plot(kind='hist', facecolor='green', alpha=0.5, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001], width=250)
-        df_range = str(df_lengths.min()) + ' - ' + str(df_lengths.max())
-        df_mean = round(df_lengths.mean(), 2)
-        df_median = round(df_lengths.median(), 2)
-        df_std = round(df_lengths.std(), 2)
+        df_lengths = []
+        tossed = 0
+        for row in self.dataframe[self.column_choice]:
+            if row > 2 and row < 5001:
+                df_lengths.append(row)
+            else:
+                tossed += 1
+        print(tossed, 'results tossed.')
+        n, bins, patches = plt.hist(df_lengths, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001, 3251, 3501, 3751, 4001, 4251, 4501, 4751, 5001], facecolor='green', alpha=0.5, width=250)
+        df_range = str(min(df_lengths)) + ' - ' + str(max(df_lengths))
+        df_mean = round(np.mean(df_lengths), 2)
+        df_median = round(np.median(df_lengths), 2)
+        df_std = round(np.std(df_lengths), 2)
+        df_total = len(df_lengths)
 
-        plt.title('Histogram of ' + str(self.column_choice) + '\'s')
+        plt.title('Histogram of ' + str(self.column_choice) + '\'s (Total: ' + str(df_total) + ')')
         plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range)
         plt.xlabel(str(self.column_choice))
         plt.ylabel('Results')
-        plt.xlim([0, 3000])
+        plt.xlim([0, 5000])
         plt.ion()
         plt.show()
         self.update_console('\n---- Histogram Output --------------------------\n', 'green')
