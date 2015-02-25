@@ -198,7 +198,9 @@ class MainWindow():
             value = self.options_box.get(selection[0])
             self.update_console(' > ' + value, 'green')
             if self.state == 'beginning':
-                if value == 'Create Pie-Chart':
+                if value == 'Create Custom Pie-Chart':
+                    self.state = 'custom_pie_chart'
+                elif value == 'Create Top 15 Pie-Chart':
                     self.state = 'column_scan'
                 elif value == 'Search Term':
                     self.state = 'search'
@@ -277,7 +279,7 @@ class MainWindow():
     def program_begin(self):
         """Greet user with initial options and set program state."""
         self.update_console('Select Parser Function', 'blue')
-        self.options_list.set(('Search Term', 'Create Pie-Chart', 'Create Histogram'))
+        self.options_list.set(('Search Term', 'Create Custom Pie-Chart', 'Create Top 15 Pie-Chart', 'Create Histogram'))
         self.cont_btn.config(state=NORMAL)
         self.state = 'beginning'
 
@@ -305,57 +307,56 @@ class MainWindow():
 
 
     def scan_column(self, df):
-        """Scan for unique elements in column, push them to chart creation."""
+        """Scan for all unique elements in column."""
         total = []
         unique = []
+        number_of_rows = 0
         for row in df[self.column_choice]:
-
             # If row is list or string check for subarray
             if type(row) is str:
-
-                # If subarray present, split elements
-                if ';' in row:
-                    row_subarray = row.split(';')
+                # Split elements if possible to do so cleanly
+                if ';' in row or ',' in row or ' ' in row:
+                    if ';' in row:
+                        row_subarray = row.split(';')
+                    elif ',' in row:
+                        row_subarray = row.split(', ')
+                    elif ' ' in row:
+                        row_subarray = row.split(' ')
                     # Sort elements by unique
                     for element in row_subarray:
-                        if element != '' and not element.endswith('.'):
-                            if element not in total:
-                                unique.append(element)
-                                total.append(element)
-                            elif element in total:
-                                total.append(element)
-                elif ',' in row:
-                    row_subarray = row.split(', ')
-                    # Sort elements by unique
-                    for element in row_subarray:
-                        if element != '' and not element.endswith('.'):
-                            if element not in total:
-                                unique.append(element)
-                                total.append(element)
-                            elif element in total:
-                                total.append(element)
-
-                # If no subarray present, use entire row
+                        if element.lower() not in ('', ' ', ',', ':', ';', '.', 'the', 'are', 'in', 'is', 'on', 'and', 'of', 'uncharacterized', 'probable') and not element.isdigit():
+                            if element.lower() not in total:
+                                unique.append(element.lower())
+                            total.append(element.lower())
+                # Otherwise use whole string
                 else:
-                    # Skip rows without entries (No_keyword, etc.)
+                    # Skip rows without entries (No_keyword, No_GOMF, etc.)
                     if ('No_') in row:
                         pass
-                    elif row not in total:
-                        unique.append(row)
-                        total.append(row)
-                    else:
-                        total.append(row)
+                    elif row.lower() not in total:
+                        unique.append(row.lower())
+                    total.append(row.lower())
 
-            # If row is not string, use entire row (numerical value)
+            # If row is not string, use entire row (numerical values)
             elif row not in total:
                 unique.append(row)
                 total.append(row)
             else:
                 total.append(row)
-        return self.create_graph(unique, total)
+            number_of_rows += 1
+        return self.create_graph(unique, total, number_of_rows)
 
 
-    def create_graph(self, analyzed, total):
+    def custom_pie_chart(self):
+        """Creation of custom pie chart. 
+        User defines any number of search terms which are searched 
+        and pieced into a chart for visualization of specific data 
+        relative to the whole."""
+        return 'TODO'
+
+
+
+    def create_graph(self, analyzed, total, number_of_rows):
         """Pie chart creation and output."""
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
@@ -363,34 +364,33 @@ class MainWindow():
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
 
-        # If comparing multiple elements to each other
-        if type(analyzed) is list:
-            analyzed_dict = {}
-            total_dataset = len(total)
-            analyzed_total = 0
-            for element in analyzed:
-                percentage = (total.count(element) / total_dataset) * 100
-                title = str(element)
-                analyzed_dict[title] = percentage
-            # Add these top 15 values to labels/size for pie-chart
-            i = 0
-            while i < 15 and len(analyzed_dict) > 0:
-                top = max(analyzed_dict, key=analyzed_dict.get)
-                labels.append(top)
-                sizes.append(analyzed_dict[top])
-                analyzed_total += total.count(top)
-                del analyzed_dict[top]
-                i += 1
-            plt.suptitle('Top ' + str(i) + ' Results in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' in total dataset)', fontsize=18)
+        analyzed_dict = {}
+        total_dataset = len(total)
+        analyzed_total = 0
+        for element in analyzed:
+            results = total.count(element)
+            title = str(element)
+            analyzed_dict[title] = results
+        # Add top values to labels/size for pie-chart
+        i = 0
+        while i < 20 and len(analyzed_dict) > 0:
+            top = max(analyzed_dict, key=analyzed_dict.get)
+            labels.append(top)
+            sizes.append(analyzed_dict[top])
+            analyzed_total += total.count(top)
+            del analyzed_dict[top]
+            i += 1
 
-        # If comparing one search to the whole
-        else:
-            percentage = round((analyzed / total) * 100, 2)
-            labels = ['Contains ' + str(self.search_term), 'Does not contain ' + str(self.search_term)]
-            sizes = [percentage, 100 - percentage]
-            plt.suptitle(str(self.search_term) + ' in ' + str(self.column_choice) + ' (accounts for ' + str(analyzed) + ' out of ' + str(total) + ' in total dataset)', fontsize=18)
+        title = 'Top ' + str(i) + ' Results in ' + str(self.column_choice)
+        subtitle = str(len(analyzed)) + ' unique elements in ' + str(number_of_rows) + ' rows'
+        plt.text(0.0, 1.14, title, ha='center', fontsize=15, bbox=dict(facecolor='none', edgecolor='black', boxstyle='round,pad=0.8'))
+        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=12)
 
-        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.05)
+        def format_autopct(pct):
+            return '{:.0f}'.format(pct * total_dataset / 100)
+
+        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.03, pctdistance=0.90, autopct=format_autopct)
+        plt.axis('equal')
         plt.ion()
         plt.show()
         self.update_console('\n---- Chart Output ------------------------------\n', 'green')
@@ -399,31 +399,40 @@ class MainWindow():
 
     def create_histogram(self):
         """Histogram creation and output."""
-        if self.column_choice != 'ContigLength':
-            self.update_console('Histogram creation only available for ContigLength column.')
-            return self.program_begin()
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
-        df_lengths = []
+        df_values = []
         tossed = 0
-        for row in self.dataframe[self.column_choice]:
-            if row > 2 and row < 5001:
-                df_lengths.append(row)
-            else:
-                tossed += 1
-        print(tossed, 'results tossed.')
-        n, bins, patches = plt.hist(df_lengths, bins=[0, 251, 501, 751, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001, 3251, 3501, 3751, 4001, 4251, 4501, 4751, 5001], facecolor='green', alpha=0.5, width=250)
-        df_range = str(min(df_lengths)) + ' - ' + str(max(df_lengths))
-        df_mean = round(np.mean(df_lengths), 2)
-        df_median = round(np.median(df_lengths), 2)
-        df_std = round(np.std(df_lengths), 2)
-        df_total = len(df_lengths)
+        if self.column_choice == 'ContigLength':
+            for row in self.dataframe[self.column_choice]:
+                if row > 1 and row < 4001:
+                    df_values.append(row)
+                else:
+                    tossed += 1
+            bins = [0, 101, 201, 301, 401, 501, 601, 701, 801, 901, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001, 3251, 3501, 3751, 4001]
+            plt.xlim([0, 4000])
+        else:
+            for row in self.dataframe[self.column_choice]:
+                if type(row) in (str, list):
+                    self.update_console('\nHistogram creation only possible for columns containing numerical values.')
+                    return self.program_begin()
+                else:
+                    df_values.append(row)
+            bins = 10
+            plt.xlim([0, max(df_values)])
 
-        plt.title('Histogram of ' + str(self.column_choice) + '\'s (Total: ' + str(df_total) + ')')
-        plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range)
+        n, bins, patches = plt.hist(df_values, bins=bins, facecolor='green', alpha=0.5)
+        df_range = str(min(df_values)) + ' - ' + str(max(df_values))
+        df_mean = round(np.mean(df_values), 2)
+        df_median = round(np.median(df_values), 2)
+        df_std = round(np.std(df_values), 2)
+        df_total = len(df_values)
+
+        plt.title('Histogram of ' + str(self.column_choice) + ' (' + str(df_total) + ' total in [1 < x < 4001], ' + str(tossed) + ' outside bounds)', fontsize=16)
+        plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range, fontsize=12)
+
         plt.xlabel(str(self.column_choice))
-        plt.ylabel('Results')
-        plt.xlim([0, 5000])
+        plt.ylabel('Rows')
         plt.ion()
         plt.show()
         self.update_console('\n---- Histogram Output --------------------------\n', 'green')
@@ -438,8 +447,8 @@ class MainWindow():
         for row in df[chosen_column]:
             row_index += 1
 
-            # Rows with numpy numerical values check for values within range
-            if 'numpy' in str(type(row)):
+            # Rows with numerical values check for values within range
+            if 'numpy' in str(type(row)) or type(row) in (float, int):
                 # Test for NaN
                 if row != row:
                     pass
@@ -471,7 +480,7 @@ class MainWindow():
             else:
                 print(type(row), 'unexpected.')
 
-        # If results, update console/dataframe, push to graph creation
+        # If results, update console/dataframe
         if search_results > 0:
             self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
             searched_data = []
@@ -479,13 +488,13 @@ class MainWindow():
                 searched_data.append(df.irow(index))
             self.dataframe = pd.DataFrame(data=searched_data)
             self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows, original was ' + str(self.original_dataframe_length) + ' rows)\n')
-            self.create_graph(search_results, self.original_dataframe_length)
         else:
             self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
 
         # Reset choices and go to beginning of program with updated dataframe
         self.column_choice = ''
         self.search_term = ''
+        return self.program_begin()
 
 
 
