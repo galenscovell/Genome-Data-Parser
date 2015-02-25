@@ -311,6 +311,7 @@ class MainWindow():
         total = []
         unique = []
         number_of_rows = 0
+        empty_entries = 0
         for row in df[self.column_choice]:
             # If row is list or string check for subarray
             if type(row) is str:
@@ -324,19 +325,18 @@ class MainWindow():
                         row_subarray = row.split(' ')
                     # Sort elements by unique
                     for element in row_subarray:
-                        if element.lower() not in ('', ' ', ',', ':', ';', '.', 'the', 'are', 'in', 'is', 'on', 'and', 'of', 'uncharacterized', 'probable') and not element.isdigit():
+                        if element.lower() not in ('', ' ', ',', ':', ';', '.', 'the', 'are', 'in', 'is', 'on', 'and', 'of', 'a', 'from', 'uncharacterized', 'probable') and not element.isdigit():
                             if element.lower() not in total:
                                 unique.append(element.lower())
                             total.append(element.lower())
                 # Otherwise use whole string
                 else:
                     # Skip rows without entries (No_keyword, No_GOMF, etc.)
-                    if ('No_') in row:
-                        pass
+                    if 'no_' in row.lower() or 'uncharacterized' in row.lower():
+                        empty_entries += 1
                     elif row.lower() not in total:
                         unique.append(row.lower())
                     total.append(row.lower())
-
             # If row is not string, use entire row (numerical values)
             elif row not in total:
                 unique.append(row)
@@ -344,7 +344,7 @@ class MainWindow():
             else:
                 total.append(row)
             number_of_rows += 1
-        return self.create_graph(unique, total, number_of_rows)
+        return self.create_graph(unique, total, number_of_rows, empty_entries)
 
 
     def custom_pie_chart(self):
@@ -356,7 +356,7 @@ class MainWindow():
 
 
 
-    def create_graph(self, analyzed, total, number_of_rows):
+    def create_graph(self, analyzed, total, number_of_rows, empty_entries):
         """Pie chart creation and output."""
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
@@ -373,7 +373,7 @@ class MainWindow():
             analyzed_dict[title] = results
         # Add top values to labels/size for pie-chart
         i = 0
-        while i < 20 and len(analyzed_dict) > 0:
+        while i < 15 and len(analyzed_dict) > 0:
             top = max(analyzed_dict, key=analyzed_dict.get)
             labels.append(top)
             sizes.append(analyzed_dict[top])
@@ -382,14 +382,14 @@ class MainWindow():
             i += 1
 
         title = 'Top ' + str(i) + ' Results in ' + str(self.column_choice)
-        subtitle = str(len(analyzed)) + ' unique elements in ' + str(number_of_rows) + ' rows'
-        plt.text(0.0, 1.14, title, ha='center', fontsize=15, bbox=dict(facecolor='none', edgecolor='black', boxstyle='round,pad=0.8'))
-        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=12)
+        subtitle = str(len(analyzed)) + ' unique elements in ' + str(number_of_rows) + ' rows (' + str(empty_entries) + ' empty entries)'
+        plt.text(0.0, 1.14, title, ha='center', fontsize=15)
+        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=11)
 
         def format_autopct(pct):
             return '{:.0f}'.format(pct * total_dataset / 100)
 
-        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.03, pctdistance=0.90, autopct=format_autopct)
+        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.04, pctdistance=0.90, autopct=format_autopct)
         plt.axis('equal')
         plt.ion()
         plt.show()
@@ -428,7 +428,7 @@ class MainWindow():
         df_std = round(np.std(df_values), 2)
         df_total = len(df_values)
 
-        plt.title('Histogram of ' + str(self.column_choice) + ' (' + str(df_total) + ' total in [1 < x < 4001], ' + str(tossed) + ' outside bounds)', fontsize=16)
+        plt.title('Histogram of ' + str(self.column_choice) + ' (' + str(df_total) + ' total for [1 < x < 4001], ' + str(tossed) + ' outside bounds)', fontsize=16)
         plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range, fontsize=12)
 
         plt.xlabel(str(self.column_choice))
