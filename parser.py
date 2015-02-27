@@ -20,6 +20,9 @@ class MainWindow():
         self.regular_font = font.Font(family='DejaVu Sans Mono', size=10)
         self.dataframe = ''
         self.state = ''
+        self.column_choice = ''
+        self.search_term = ''
+        self.custom_chart_terms = []
 
 
         # -------------------------------------------------- #
@@ -42,6 +45,8 @@ class MainWindow():
 
         self.search_input = ttk.Entry(self.console_frame, width=40)
         self.search_input.config(state=DISABLED)
+        self.add_btn = ttk.Button(self.console_frame, width=10, text='Add', command=self.add_event)
+        self.add_btn.config(state=DISABLED)
         self.relative_btn = ttk.Button(self.console_frame, width=10, text='Relative', command=self.relative_search_event)
         self.relative_btn.config(state=DISABLED)
         self.cont_btn = ttk.Button(self.console_frame, width=10, text='Continue', command=self.select_list_item)
@@ -79,9 +84,12 @@ class MainWindow():
         self.console_text.grid(column=0, row=1)
         self.console_scrollbar.grid(column=1, row=1, sticky=NS)
         self.search_input.grid(column=0, row=2, pady=2, ipady=2, columnspan=2)
+
+        self.add_btn.grid(column=0, row=3, padx=(14, 0), pady=(0, 30), sticky=S)
         self.relative_btn.grid(column=0, row=3, padx=(166, 0), sticky=W)
-        self.cont_btn.grid(column=0, row=3, padx=(16, 0))
+        self.cont_btn.grid(column=0, row=3, padx=(14, 0), pady=(30, 0), sticky=N)
         self.exact_btn.grid(column=0, row=3, padx=(0, 150), sticky=E)
+
         self.detail_box.grid(column=0, row=5)
         self.options_box.grid(column=0, row=4, pady=(4, 4), columnspan=2)
         self.options_scrollbar.grid(column=1, row=4, sticky=NS)
@@ -130,6 +138,9 @@ class MainWindow():
         self.exact_btn.bind('<Enter>', lambda x: self.detail_var.set('Find exact term only.'))
         self.exact_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
 
+        self.add_btn.bind('<Enter>', lambda x: self.detail_var.set('Add current term to list of terms for custom pie-chart.'))
+        self.add_btn.bind('<Leave>', lambda x: self.detail_var.set(''))
+
         self.search_input.bind('<Enter>', lambda x: self.detail_var.set('Enter search term then choose <Relative> or <Exact>.'))
         self.search_input.bind('<Leave>', lambda x: self.detail_var.set(''))
 
@@ -177,6 +188,7 @@ class MainWindow():
         self.state = ''
         self.column_choice = ''
         self.search_term = ''
+        self.custom_chart_terms = []
         self.save_btn.config(state=DISABLED)
         self.options_list.set('')
         self.current_file.set('No file loaded.')
@@ -206,12 +218,14 @@ class MainWindow():
                     self.state = 'search'
                 elif value == 'Create Histogram':
                     self.state = 'histogram'
-                self.pick_column(self.dataframe)
+                self.pick_column()
             else:
                 self.column_choice = value
                 self.options_list.set('')
-                if self.state == 'column_scan':
-                    self.scan_column(self.dataframe)
+                if self.state == 'custom_pie_chart':
+                    self.custom_term_prompt()
+                elif self.state == 'column_scan':
+                    self.scan_column()
                 elif self.state == 'search':
                     self.term_prompt()
                 elif self.state == 'histogram':
@@ -231,13 +245,18 @@ class MainWindow():
 
     def relative_search_event(self):
         """Set parser search state to 'relative'."""
-        self.state = 'relative_search'
+        self.state = 'Relative search'
         return self.get_search_input()
 
 
     def exact_search_event(self):
         """Set parser search state to 'exact'."""
-        self.state = 'exact_search'
+        self.state = 'Exact search'
+        return self.get_search_input()
+
+
+    def add_event(self):
+        """Collect custom term for custom chart."""
         return self.get_search_input()
 
 
@@ -245,12 +264,33 @@ class MainWindow():
         """Collect user search term while entry is enabled."""
         self.search_term = self.search_input.get()
         if self.search_term:
-            self.search_input.delete(0, END)
-            self.search_input.config(state=DISABLED)
-            self.relative_btn.config(state=DISABLED)
-            self.exact_btn.config(state=DISABLED)
-            self.update_console(' > ' + self.search_term, 'green')
-            self.search_keyword(self.dataframe, self.column_choice, self.search_term)
+            if self.state == 'custom_pie_chart':
+                if self.search_term.lower() != 'end':
+                    self.custom_chart_terms.append(self.search_term)
+                    self.update_console('Added \'' + self.search_term + '\' to custom chart terms.', 'green')
+                    self.search_input.delete(0, END)
+                    self.search_input.focus()
+                else:
+                    self.search_input.delete(0, END)
+                    self.search_input.config(state=DISABLED)
+                    self.add_btn.config(state=DISABLED)
+                    return self.custom_pie_chart()
+            else:
+                self.search_input.delete(0, END)
+                self.search_input.config(state=DISABLED)
+                self.relative_btn.config(state=DISABLED)
+                self.exact_btn.config(state=DISABLED)
+                self.update_console(' > ' + self.search_term, 'green')
+                self.search_keyword()
+
+
+    def custom_term_prompt(self):
+        """Enable entry widget, set program to wait for custom term."""
+        self.update_console('\nEnter each term followed by <Add> to create list of custom chart terms (enter \'end\' to finish)', 'blue')
+        self.search_input.config(state=NORMAL)
+        self.add_btn.config(state=NORMAL)
+        self.cont_btn.config(state=DISABLED)
+        self.search_input.focus()
             
 
     def file_browser(self):
@@ -297,52 +337,39 @@ class MainWindow():
         return dataframe
 
 
-    def pick_column(self, df):
-        """Create column headers list within df, push them to listbox."""
-        header_info = list(df)
-        header_message = ', '.join(list(df))
+    def pick_column(self):
+        """Create column headers list within dataframe, push them to listbox."""
+        header_info = list(self.dataframe)
+        header_message = ', '.join(list(self.dataframe))
         self.update_console('\nSelect Column of Interest', 'blue')
         self.update_console(header_message)
         self.options_list.set(tuple(header_info))
 
 
-    def scan_column(self, df):
+    def scan_column(self):
         """Scan for all unique elements in column."""
         total = []
         unique = []
         number_of_rows = 0
         empty_entries = 0
-        for row in df[self.column_choice]:
-            # If row is list or string check for subarray
+        for row in self.dataframe[self.column_choice]:
             if type(row) is str:
-                # Split elements if possible to do so cleanly
-                if ';' in row or ',' in row or ' ' in row:
-                    if ';' in row:
-                        row_subarray = row.split(';')
-                    elif ',' in row:
-                        row_subarray = row.split(', ')
-                    elif ' ' in row:
-                        row_subarray = row.split(' ')
-                    # Sort elements by unique
-                    for element in row_subarray:
-                        if element.lower() not in ('', ' ', ',', ':', ';', '.', 'the', 'are', 'in', 'is', 'on', 'and', 'of', 'a', 'from', 'uncharacterized', 'probable') and not element.isdigit():
-                            if element.lower() not in total:
-                                unique.append(element.lower())
-                            total.append(element.lower())
-                # Otherwise use whole string
-                else:
-                    # Skip rows without entries (No_keyword, No_GOMF, etc.)
-                    if 'no_' in row.lower() or 'uncharacterized' in row.lower():
+                row_subarray = re.split(';|,', row)
+                for element in row_subarray:
+                    # Toss rows with empty or null data
+                    if 'no_' in element.lower() or 'uncharacterized' in element.lower():
                         empty_entries += 1
-                    elif row.lower() not in total:
-                        unique.append(row.lower())
-                    total.append(row.lower())
-            # If row is not string, use entire row (numerical values)
-            elif row not in total:
-                unique.append(row)
-                total.append(row)
+                    # Check if element is unique
+                    elif element.lower() not in total:
+                        unique.append(element.lower())
+                        total.append(element.lower())
+                    # Else add to total only
+                    else:
+                        total.append(element.lower())
+            # If row is not string, pie-chart not ideal
             else:
-                total.append(row)
+                self.update_console('\nNumerical values found, histogram recommended.')
+                return self.program_begin()
             number_of_rows += 1
         return self.create_graph(unique, total, number_of_rows, empty_entries)
 
@@ -352,14 +379,69 @@ class MainWindow():
         User defines any number of search terms which are searched 
         and pieced into a chart for visualization of specific data 
         relative to the whole."""
-        return 'TODO'
+        def format_autopct(pct):
+            return '{:.0f}'.format(pct * analyzed_total / 100)
 
+        plt.rcParams['figure.figsize'] = 14, 7
+        plt.rcParams['font.size'] = 10
+        plt.clf()
+        labels = []
+        sizes = []
+        colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
+
+        self.update_console('Chart terms: ' + str(self.custom_chart_terms), 'green')
+
+        number_of_rows = len(self.dataframe)
+        analyzed_total = 0
+        total_dataset = 0
+        empty_entries = 0
+        term_dictionary = {}
+        for term in self.custom_chart_terms:
+            term_dictionary[term] = 0
+
+        for row in self.dataframe[self.column_choice]:
+            if type(row) is str:
+                row_subarray = re.split(';|,', row)
+                for element in row_subarray:
+                    # Toss rows with empty or null data
+                    if 'no_' in element.lower() or 'uncharacterized' in element.lower():
+                        empty_entries += 1
+                    else:
+                        for term in self.custom_chart_terms:
+                            if term.lower() in element.lower():
+                                term_dictionary[term] += 1
+                    total_dataset += 1
+            else:
+                self.update_console('\nNumerical values found, histogram recommended.')
+                return self.program_begin()
+
+        # Add info from dictionary to pie-chart labels/sizes
+        for term in term_dictionary:
+            labels.append(term)
+            sizes.append(term_dictionary[term])
+            analyzed_total += term_dictionary[term]
+
+        title = 'Custom Pie-Chart for ' + str(self.column_choice)
+        subtitle = str(number_of_rows - empty_entries) + ' non-empty rows in column, ' + str(analyzed_total) + ' out of ' + str(total_dataset - empty_entries) + ' elements contain at least one of the given terms'
+        plt.text(0.0, 1.14, title, ha='center', fontsize=15)
+        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=11)
+
+        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.04, pctdistance=0.90, autopct=format_autopct)
+        plt.axis('equal')
+        plt.ion()
+        plt.show()
+        self.update_console('\n---- Chart Output ------------------------------\n', 'green')
+        return self.program_begin()
 
 
     def create_graph(self, analyzed, total, number_of_rows, empty_entries):
         """Pie chart creation and output."""
+        def format_autopct(pct):
+            return '{:.0f}'.format(pct * analyzed_total / 100)
+
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
+        plt.clf()
         labels = []
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
@@ -382,12 +464,9 @@ class MainWindow():
             i += 1
 
         title = 'Top ' + str(i) + ' Results in ' + str(self.column_choice)
-        subtitle = str(len(analyzed)) + ' unique elements in ' + str(number_of_rows) + ' rows (' + str(empty_entries) + ' empty entries)'
+        subtitle = str(number_of_rows - empty_entries) + ' non-empty rows in column, ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' elements contain at least one of these terms'
         plt.text(0.0, 1.14, title, ha='center', fontsize=15)
         plt.text(0.0, 1.08, subtitle, ha='center', fontsize=11)
-
-        def format_autopct(pct):
-            return '{:.0f}'.format(pct * total_dataset / 100)
 
         plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.04, pctdistance=0.90, autopct=format_autopct)
         plt.axis('equal')
@@ -401,6 +480,7 @@ class MainWindow():
         """Histogram creation and output."""
         plt.rcParams['figure.figsize'] = 14, 7
         plt.rcParams['font.size'] = 10
+        plt.clf()
         df_values = []
         tossed = 0
         if self.column_choice == 'ContigLength':
@@ -409,7 +489,8 @@ class MainWindow():
                     df_values.append(row)
                 else:
                     tossed += 1
-            bins = [0, 101, 201, 301, 401, 501, 601, 701, 801, 901, 1001, 1251, 1501, 1751, 2001, 2251, 2501, 2751, 3001, 3251, 3501, 3751, 4001]
+            bins = [0, 201, 401, 601, 801, 1001, 1201, 1401, 1601, 1801, 2001, 2201, 2401, 2601, 2801, 3001, 3201, 3401, 3601, 3801, 4001]
+            plt.xticks(range(0, 4000, 200))
             plt.xlim([0, 4000])
         else:
             for row in self.dataframe[self.column_choice]:
@@ -439,12 +520,12 @@ class MainWindow():
         return self.program_begin()
 
 
-    def search_keyword(self, df, chosen_column, search_term):
+    def search_keyword(self):
         """Return all rows with term in specified column."""
         row_index = -1
         row_list = []
         search_results = 0
-        for row in df[chosen_column]:
+        for row in self.dataframe[self.column_choice]:
             row_index += 1
 
             # Rows with numerical values check for values within range
@@ -452,48 +533,50 @@ class MainWindow():
                 # Test for NaN
                 if row != row:
                     pass
-                elif search_term[0] == '>' and float(search_term[1:]) <= row:
+                elif self.search_term[0] == '>' and float(self.search_term[1:]) <= row:
                     search_results += 1
                     row_list.append(row_index)
-                elif search_term[0] == '<' and float(search_term[1:]) >= row:
+                elif self.search_term[0] == '<' and float(self.search_term[1:]) >= row:
                     search_results += 1
                     row_list.append(row_index)
-                elif search_term[0] == '=' and float(search_term[1:]) == row:
+                elif self.search_term[0] == '=' and float(self.search_term[1:]) == row:
                     search_results += 1
                     row_list.append(row_index)
-                elif search_term[0] not in ('<', '>', '='):
+                elif self.search_term[0] not in ('<', '>', '='):
                     self.update_console('\nNumerical values require < or > to specify range.')
                     return self.term_prompt()
 
             # Rows composed of strings split and check elements, regex
             elif type(row) is str:
-                row_subarray = row.split(';')
+                row_subarray = re.split(';', row)
+                print(row_subarray)
                 for element in row_subarray:
-                    if self.state == 'relative_search':
-                        if re.search('(?i)' + search_term, element):
+                    if self.state == 'Relative search':
+                        if re.search('(?i)' + self.search_term, element):
                             search_results += 1
                             row_list.append(row_index)
-                    elif self.state == 'exact_search':
-                        if re.match('(?i)' + search_term, element):
+                    elif self.state == 'Exact search':
+                        if re.match('(?i)' + self.search_term, element):
                             search_results += 1
                             row_list.append(row_index)
             else:
                 print(type(row), 'unexpected.')
 
-        # If results, update console/dataframe
+        # Update console/dataframe
         if search_results > 0:
-            self.update_console('\n[ ' + str(search_results) + ' results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+            self.update_console('\n' + self.state + ' [' + str(search_results) + ' results found for \'' + self.search_term + '\' in \'' + self.column_choice + '\']')
             searched_data = []
             for index in row_list:
-                searched_data.append(df.irow(index))
+                searched_data.append(self.dataframe.irow(index))
             self.dataframe = pd.DataFrame(data=searched_data)
             self.update_console('\tDataframe updated (' + str(len(self.dataframe)) + ' rows, original was ' + str(self.original_dataframe_length) + ' rows)\n')
         else:
-            self.update_console('\n[ No results found for \'' + search_term + '\' in \'' + chosen_column + '\' ]')
+            self.update_console('\n' + self.state + ' [No results found for \'' + self.search_term + '\' in \'' + self.column_choice + '\']')
 
         # Reset choices and go to beginning of program with updated dataframe
         self.column_choice = ''
         self.search_term = ''
+        self.custom_chart_terms = []
         return self.program_begin()
 
 
@@ -507,9 +590,9 @@ def create_interface():
     root.title('Data Parser')
     screen_x = root.winfo_screenwidth()
     screen_y = root.winfo_screenheight()
-    window_x, window_y = 640, 640
+    window_x, window_y = 640, 660
     x_pos = (screen_x / 2) - (window_x / 2)
-    y_pos = (screen_y / 2) - (window_y / 2)
+    y_pos = (screen_y / 2) - (window_y / 2) - 30
     root.geometry('%dx%d+%d+%d' % (window_x, window_y, x_pos, y_pos))
     root.resizable(FALSE, FALSE)
     return root
