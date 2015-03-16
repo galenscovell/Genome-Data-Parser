@@ -212,7 +212,7 @@ class MainWindow():
             if self.state == 'beginning':
                 if value == 'Create Custom Pie-Chart':
                     self.state = 'custom_pie_chart'
-                elif value == 'Create Top 15 Pie-Chart':
+                elif value == 'Create Top 20 Pie-Chart':
                     self.state = 'column_scan'
                 elif value == 'Search Term':
                     self.state = 'search'
@@ -267,7 +267,7 @@ class MainWindow():
             if self.state == 'custom_pie_chart':
                 if self.search_term.lower() != 'end':
                     self.custom_chart_terms.append(self.search_term)
-                    self.update_console('Added \'' + self.search_term + '\' to custom chart terms.', 'green')
+                    self.update_console('Current terms: ' + str(self.custom_chart_terms), 'green')
                     self.search_input.delete(0, END)
                     self.search_input.focus()
                 else:
@@ -319,7 +319,7 @@ class MainWindow():
     def program_begin(self):
         """Greet user with initial options and set program state."""
         self.update_console('Select Parser Function', 'blue')
-        self.options_list.set(('Search Term', 'Create Custom Pie-Chart', 'Create Top 15 Pie-Chart', 'Create Histogram'))
+        self.options_list.set(('Search Term', 'Create Custom Pie-Chart', 'Create Top 20 Pie-Chart', 'Create Histogram'))
         self.cont_btn.config(state=NORMAL)
         self.state = 'beginning'
 
@@ -351,14 +351,18 @@ class MainWindow():
         total = []
         unique = []
         number_of_rows = 0
-        empty_entries = 0
+        empty_elements = 0
         for row in self.dataframe[self.column_choice]:
             if type(row) is str:
-                row_subarray = re.split(';|,', row)
+                # Remove text within parentheses (GO numbers)
+                row = re.sub(r'\([^)]*\)', '', row)
+                # Split string by semicolon and comma
+                row_subarray = re.split(';', row)
                 for element in row_subarray:
+                    element = element.strip()
                     # Toss rows with empty or null data
-                    if 'no_' in element.lower() or 'uncharacterized' in element.lower():
-                        empty_entries += 1
+                    if 'no_' in element.lower() or 'uncharacterized' in element.lower() or element == '':
+                        empty_elements += 1
                     # Check if element is unique
                     elif element.lower() not in total:
                         unique.append(element.lower())
@@ -366,19 +370,17 @@ class MainWindow():
                     # Else add to total only
                     else:
                         total.append(element.lower())
-            # If row is not string, pie-chart not ideal
+            # If row is not string, skip row (NaN)
             else:
-                self.update_console('\nNumerical values found, histogram recommended.')
-                return self.program_begin()
+                pass
             number_of_rows += 1
-        return self.create_graph(unique, total, number_of_rows, empty_entries)
+        return self.create_graph(unique, total, number_of_rows, empty_elements)
 
 
     def custom_pie_chart(self):
         """Creation of custom pie chart. 
         User defines any number of search terms which are searched 
-        and pieced into a chart for visualization of specific data 
-        relative to the whole."""
+        and pieced into a chart relative to the whole."""
         def format_autopct(pct):
             return '{:.0f}'.format(pct * analyzed_total / 100)
 
@@ -389,44 +391,43 @@ class MainWindow():
         sizes = []
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
 
-        self.update_console('Chart terms: ' + str(self.custom_chart_terms), 'green')
-
         number_of_rows = len(self.dataframe)
         analyzed_total = 0
-        total_dataset = 0
-        empty_entries = 0
+        empty_elements = 0
         term_dictionary = {}
         for term in self.custom_chart_terms:
             term_dictionary[term] = 0
 
         for row in self.dataframe[self.column_choice]:
             if type(row) is str:
+                # Remove text within parentheses (GO numbers)
+                row = re.sub(r'\([^)]*\)', '', row)
+                # Split string by semicolon and comma
                 row_subarray = re.split(';|,', row)
                 for element in row_subarray:
+                    element = element.strip()
                     # Toss rows with empty or null data
-                    if 'no_' in element.lower() or 'uncharacterized' in element.lower():
-                        empty_entries += 1
+                    if 'no_' in element.lower() or 'uncharacterized' in element.lower() or element == '':
+                        empty_elements += 1
                     else:
                         for term in self.custom_chart_terms:
                             if term.lower() in element.lower():
                                 term_dictionary[term] += 1
-                    total_dataset += 1
-            else:
-                self.update_console('\nNumerical values found, histogram recommended.')
-                return self.program_begin()
 
         # Add info from dictionary to pie-chart labels/sizes
-        for term in term_dictionary:
-            labels.append(term)
-            sizes.append(term_dictionary[term])
-            analyzed_total += term_dictionary[term]
+        while len(term_dictionary) > 0:
+            top = max(term_dictionary, key=term_dictionary.get)
+            labels.append(top)
+            sizes.append(term_dictionary[top])
+            analyzed_total += term_dictionary[top]
+            del term_dictionary[top]
 
         title = 'Custom Pie-Chart for ' + str(self.column_choice)
-        subtitle = str(number_of_rows - empty_entries) + ' non-empty rows in column, ' + str(analyzed_total) + ' out of ' + str(total_dataset - empty_entries) + ' elements contain at least one of the given terms'
-        plt.text(0.0, 1.14, title, ha='center', fontsize=15)
-        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=11)
+        subtitle = str(number_of_rows) + ' rows total | value is number of rows containing term'
+        plt.text(0.0, 1.15, title, ha='center', fontsize=15)
+        plt.text(0.0, 1.10, subtitle, ha='center', fontsize=11)
 
-        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.04, pctdistance=0.90, autopct=format_autopct)
+        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.03, pctdistance=0.90, autopct=format_autopct)
         plt.axis('equal')
         plt.ion()
         plt.show()
@@ -434,7 +435,7 @@ class MainWindow():
         return self.program_begin()
 
 
-    def create_graph(self, analyzed, total, number_of_rows, empty_entries):
+    def create_graph(self, analyzed, total, number_of_rows, empty_elements):
         """Pie chart creation and output."""
         def format_autopct(pct):
             return '{:.0f}'.format(pct * analyzed_total / 100)
@@ -447,7 +448,6 @@ class MainWindow():
         colors = ['#f1c40f', '#2ecc71', '#1abc9c', '#e74c3c', '#9b59b6', '#e67e22', '#8e44ad', '#34495e', '#3498db', '#27ae60']
 
         analyzed_dict = {}
-        total_dataset = len(total)
         analyzed_total = 0
         for element in analyzed:
             results = total.count(element)
@@ -455,7 +455,7 @@ class MainWindow():
             analyzed_dict[title] = results
         # Add top values to labels/size for pie-chart
         i = 0
-        while i < 15 and len(analyzed_dict) > 0:
+        while i < 20 and len(analyzed_dict) > 0:
             top = max(analyzed_dict, key=analyzed_dict.get)
             labels.append(top)
             sizes.append(analyzed_dict[top])
@@ -464,11 +464,11 @@ class MainWindow():
             i += 1
 
         title = 'Top ' + str(i) + ' Results in ' + str(self.column_choice)
-        subtitle = str(number_of_rows - empty_entries) + ' non-empty rows in column, ' + str(analyzed_total) + ' out of ' + str(total_dataset) + ' elements contain at least one of these terms'
-        plt.text(0.0, 1.14, title, ha='center', fontsize=15)
-        plt.text(0.0, 1.08, subtitle, ha='center', fontsize=11)
+        subtitle = str(number_of_rows) + ' rows total | value is number of rows containing term'
+        plt.text(0.0, 1.15, title, ha='center', fontsize=15)
+        plt.text(0.0, 1.10, subtitle, ha='center', fontsize=11)
 
-        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.04, pctdistance=0.90, autopct=format_autopct)
+        plt.pie(sizes, labels=labels, colors=colors, startangle=180, labeldistance=1.03, pctdistance=0.90, autopct=format_autopct)
         plt.axis('equal')
         plt.ion()
         plt.show()
@@ -485,7 +485,7 @@ class MainWindow():
         tossed = 0
         if self.column_choice == 'ContigLength':
             for row in self.dataframe[self.column_choice]:
-                if row > 1 and row < 4001:
+                if row > 400 and row < 4001:
                     df_values.append(row)
                 else:
                     tossed += 1
@@ -499,7 +499,7 @@ class MainWindow():
                     return self.program_begin()
                 else:
                     df_values.append(row)
-            bins = 10
+            bins = 20
             plt.xlim([0, max(df_values)])
 
         n, bins, patches = plt.hist(df_values, bins=bins, facecolor='green', alpha=0.5)
@@ -509,7 +509,7 @@ class MainWindow():
         df_std = round(np.std(df_values), 2)
         df_total = len(df_values)
 
-        plt.title('Histogram of ' + str(self.column_choice) + ' (' + str(df_total) + ' total for [1 < x < 4001], ' + str(tossed) + ' outside bounds)', fontsize=16)
+        plt.title('Histogram of ' + str(self.column_choice) + ' (' + str(df_total) + ' total)', fontsize=16)
         plt.suptitle('Standard Deviation: ' + str(df_std) + ', Mean: ' + str(df_mean) + ', Median: ' + str(df_median) + ', Range: ' + df_range, fontsize=12)
 
         plt.xlabel(str(self.column_choice))
@@ -549,7 +549,6 @@ class MainWindow():
             # Rows composed of strings split and check elements, regex
             elif type(row) is str:
                 row_subarray = re.split(';', row)
-                print(row_subarray)
                 for element in row_subarray:
                     if self.state == 'Relative search':
                         if re.search('(?i)' + self.search_term, element):
