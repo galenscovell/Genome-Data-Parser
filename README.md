@@ -8,7 +8,6 @@ Utilizes:
 * <b>Pandas</b> and <b>Xlrd</b> module for handling csv, xls, and xlsx data
 * <b>tkinter</b> for GUI creation
 * <b>Matplotlib</b> for statistical representations
-* <b>Pynsist</b> for executable construction
 
 Features:
 * Works with all csv/xls/xlsx data files containing column headers
